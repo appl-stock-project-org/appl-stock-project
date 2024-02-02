@@ -1,0 +1,7 @@
+// *.db rule might prevent the sqlite-file visibility in the project's structure  
+*.db
+.vs
+node_modules
+bin
+obj
+Migrations
