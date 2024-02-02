@@ -11,7 +11,7 @@ also OK). VS2022 works fine too.
 4. Now you can use these three CLI instances to run the dev
    environment. Please refer further into these instructions.
 
-
+   
 You can you CMD, VS2022 shell, VSCode shell or any other shell too.
 
 ** .NET API
@@ -27,13 +27,27 @@ You can you CMD, VS2022 shell, VSCode shell or any other shell too.
 Start application with ~dotnet watch~
 
 *** Sqlite and tools
-For sqlite usage:
+For sqlite usage few dotnet packages and tools are needed:
 
-~dotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 8.0~
-~dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0~
-~dotnet tool install --global dotnet-ef~
-~dotnet ef migrations add InitialCreate~
-~dotnet ef database update~
+#+begin_src 
+dotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 8.0
+#+end_src
+
+#+begin_src 
+dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0  
+#+end_src
+
+#+begin_src 
+dotnet tool install --global dotnet-ef  
+#+end_src
+
+#+begin_src 
+dotnet ef migrations add InitialCreate  
+#+end_src
+
+#+begin_src 
+dotnet ef database update  
+#+end_src
 
 If you wish, you can install Sqlite studio to manage the db:
 https://sqlitestudio.pl/
@@ -50,8 +64,6 @@ To run a project, give the following command:
 Sometimes dotnet watch does not work properly and needs to be
 interrupted and restarted.
 
-
-
 # Starting empty blazor tailwindcss project:
 # dotnet new blazor -o FOLDER -e
 # npm install tailwindcss postcss autoprefixer
@@ -60,6 +72,7 @@ interrupted and restarted.
 # Add css directives to app.css
 # npx tailwindcss -i ./wwwroot/app.css -o ./wwwroot/styles.css --minify
 # Change App .razor to use styles.css
+
 ** Readme comments
 Readme file contains more info about creation steps of this project,
 so you might want to inspect it more.
