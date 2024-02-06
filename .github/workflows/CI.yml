@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [ "develop", "main" ]
 
+defaults:
+  run:
+    working-directory: ./AppleStockAPI
+
 jobs:
   build:
     runs-on: ubuntu-latest
