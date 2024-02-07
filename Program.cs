@@ -16,6 +16,15 @@ List<Bid> bids = new List<Bid>();
 
 app.MapGet("/", () => "Hello World!");
 app.MapGet("/stocks", async (StockDb db) => await db.Stocks.ToListAsync());
+
+
+/*
+    Example POST request body/payload to endpoint "/bid"
+    {
+        "price": 80,
+        "quantity": 30
+    }
+*/
 app.MapPost("/bid", (Bid payload) => BidController.handleBid(payload, bids));
 app.Run();
 
