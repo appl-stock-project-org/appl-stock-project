@@ -50,27 +50,6 @@ dotnet ef database update
 If you wish, you can install Sqlite studio to manage the db:
 https://sqlitestudio.pl/
 
-# ** Blazor
-# You need to install modules:
-# ~npm install~
-
-# # To apply class-property changes to html-elements into the .razor-files, the next command may needs to be run:
-# # ~npx tailwindcss -i ./wwwroot/app.css -o ./wwwroot/styles.css --watch~
-
-# To run a project, give the following command:
-# ~dotnet watch~
-
-# Sometimes dotnet watch does not work properly and needs to be
-# interrupted and restarted.
-
-# Starting empty blazor tailwindcss project:
-# dotnet new blazor -o FOLDER -e
-# npm install tailwindcss postcss autoprefixer
-# npx tailwindcss init
-# Fix content paths; content: ["./**/*.{razor,html,cshtml}"],
-# Add css directives to app.css
-# npx tailwindcss -i ./wwwroot/app.css -o ./wwwroot/styles.css --minify
-# Change App .razor to use styles.css
 
 ** Readme comments
 Readme file contains more info about creation steps of this project,
