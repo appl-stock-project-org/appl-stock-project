@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using AppleStockAPI.Models;
+using AppleStockAPI.Controllers;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Enable sqlite with connection string and builder
@@ -8,6 +10,12 @@ builder.Services.AddSqlite<StockDb>(connectionString);
 
 var app = builder.Build();
 
+// Let's leave the above db scaffolding as an example for now, in case we want to use it afterall.
+// It does look quite simple, I just did the List implementation for a start
+List<Bid> bids = new List<Bid>();
+
 app.MapGet("/", () => "Hello World!");
 app.MapGet("/stocks", async (StockDb db) => await db.Stocks.ToListAsync());
+app.MapPost("/bid", (Bid payload) => BidController.handleBid(payload, bids));
 app.Run();
+
