@@ -5,8 +5,8 @@ namespace AppleStockAPI.Models {
     /// Class for structuring a response
     /// </summary>
 	public class Response {
-        public string ErrorMessage { get; set; }
+        public string? ErrorMessage { get; set; }
         public bool Success { get; set; }
-        public string SuccessMessage { get; set; }
+        public string? SuccessMessage { get; set; }
     }
 }
