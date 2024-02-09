@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "AppleStockAPI.Test": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:30134;http://localhost:30135"
+    }
+  }
+}
