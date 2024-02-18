@@ -46,7 +46,7 @@ jobs:
           while ["$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}')" != "Running" ] && $iteration -le 5]; do
             echo "Waiting for Pod $POD_NAME to be in the Running state..."
             sleep 5
-            ((iteration++))
+            iteration=$(iteration+1)
           done
 
       - name: Test service URLs
