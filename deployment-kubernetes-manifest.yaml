@@ -14,7 +14,7 @@ spec:
       containers:
         - name: apple-stock-project
           imagePullPolicy: Never
-          image: local/example:latest
+          image: local/kubernetes-test:latest
           resources:
             limits:
               memory: "128Mi"

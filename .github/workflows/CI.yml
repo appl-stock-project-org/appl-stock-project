@@ -40,5 +40,5 @@ jobs:
       - name: Test service URLs
         run: |
           minikube service list
-          minikube service kubernetes-test --url
-          curl $(minikube service kubernetes-test --url)
+          minikube service apple-stock-service --url
+          curl $(minikube service apple-stock-service --url)
