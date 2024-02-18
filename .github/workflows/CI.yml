@@ -40,6 +40,15 @@ jobs:
           kubectl apply -f service-kubernetes-manifest.yaml
           kubectl apply -f deployment-kubernetes-manifest.yaml
           kubectl get pods
+          export POD_NAME="$(kubectl get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')"
+          echo "Name of the Pod: $POD_NAME"
+          iteration=1
+          while [[ "$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}')" != "Running" ] && $iteration -le 5]; do
+            echo "Waiting for Pod $POD_NAME to be in the Running state..."
+            sleep 5
+            ((iteration++))
+          done
+
       - name: Test service URLs
         run: |
           minikube service list
