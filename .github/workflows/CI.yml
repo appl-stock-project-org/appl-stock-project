@@ -33,11 +33,12 @@ jobs:
         run: |
           export SHELL=/bin/bash
           eval $(minikube -p minikube docker-env)
-          docker build -f ./Dockerfile -t local/kubernetes-test .
+          docker build -f ./Dockerfile -t apple-stock-kubernetes-test .
           docker images
       - name: Deploy to minikube
         run: |
           kubectl apply -f service-kubernetes-manifest.yaml
+          kubectl apply -f deployment-kubernetes-manifest.yaml
           kubectl get pods
       - name: Test service URLs
         run: |

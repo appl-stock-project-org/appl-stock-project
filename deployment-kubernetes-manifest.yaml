@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: apple-stock-project
+  name: apple-stock-project-deployment
 spec:
   selector:
     matchLabels:
-      app: apple-stock-project
+      app: apple-stock-project-deployment
   replicas: 1
   template:
     metadata:
       labels:
-        app: apple-stock-project
+        app: apple-stock-project-deployment
     spec:
       containers:
-        - name: apple-stock-project
+        - name: apple-stock-project-container
           imagePullPolicy: Never
-          image: local/kubernetes-test:latest
+          image: apple-stock-kubernetes-test:latest
           resources:
             limits:
               memory: "128Mi"

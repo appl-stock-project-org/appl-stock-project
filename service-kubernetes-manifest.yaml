@@ -4,9 +4,9 @@ metadata:
   name: apple-stock-service
 spec:
   selector:
-    app: apple-stock-project
+    app: apple-stock-project-deployment
   ports:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-  type: NodePort
+  type: LoadBalancer
