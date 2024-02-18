@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apple-stock-project
+spec:
+  selector:
+    matchLabels:
+      app: apple-stock-project
+  template:
+    metadata:
+      labels:
+        app: apple-stock-project
+    spec:
+      containers:
+        - name: apple-stock-project
+          imagePullPolicy: Never
+          image: local/example:latest
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8080
