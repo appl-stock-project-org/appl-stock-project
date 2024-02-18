@@ -42,11 +42,14 @@ jobs:
           kubectl get pods
           export POD_NAME="$(kubectl get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')"
           echo "Name of the Pod: $POD_NAME"
+          export POD_STATUS="$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}')"
+          echo "Pod status: $POD_STATUS"
           iteration=1
-          while ["$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}')" != "Running" ] && $iteration -le 5]; do
-            echo "Waiting for Pod $POD_NAME to be in the Running state..."
-            sleep 5
-            iteration=$(iteration+1)
+          while ["$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}')" != "Running" ] && $iteration -lt 5]; do
+            echo "Waiting for Pod $POD_NAME to be in the Running state...";
+            echo "Iteration $iteration";
+            sleep 5; 
+            iteration=$((iteration + 1));
           done
 
       - name: Test service URLs
