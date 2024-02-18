@@ -6,6 +6,7 @@ spec:
   selector:
     matchLabels:
       app: apple-stock-project
+  replicas: 1
   template:
     metadata:
       labels:

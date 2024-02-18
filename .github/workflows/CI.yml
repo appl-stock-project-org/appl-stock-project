@@ -36,7 +36,9 @@ jobs:
           docker build -f ./Dockerfile -t local/kubernetes-test .
           docker images
       - name: Deploy to minikube
-        run: kubectl apply -f service-kubernetes-manifest.yaml
+        run: |
+          kubectl apply -f service-kubernetes-manifest.yaml
+          kubectl get pods
       - name: Test service URLs
         run: |
           minikube service list
