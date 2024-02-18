@@ -45,7 +45,7 @@ jobs:
           export POD_STATUS="$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}')"
           echo "Pod status: $POD_STATUS"
           iteration=1
-          while [ "$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}')" != "Running" && $iteration -lt 5 ]; do
+          while [ "$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}')" != "Running" ] && [ $iteration -lt 5 ]; do
             echo "Waiting for Pod $POD_NAME to be in the Running state...";
             echo "Iteration $iteration";
             sleep 5; 
