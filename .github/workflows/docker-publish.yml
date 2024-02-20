@@ -38,6 +38,9 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Make the script files executable
+        run: chmod +x updateVersion.sh
+
       - name: Semantic Release
         id: release
         uses: cycjimmy/semantic-release-action@v4
