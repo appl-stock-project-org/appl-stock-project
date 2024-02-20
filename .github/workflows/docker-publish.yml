@@ -6,10 +6,10 @@ name: Docker Release
 # documentation.
 
 on:
-  push:
-    branches: [ "main", "develop" ]
-    # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [master, develop]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -21,6 +21,7 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: write
       packages: write
@@ -37,32 +38,33 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Semantic Release
-        id: release
-        uses: cycjimmy/semantic-release-action@v4
-        with:
-          branches: |
-            [
-              '+([0-9])?(.{+([0-9]),x}).x',
-              'main',
-              {
-                name: 'develop',
-                prerelease: true
-              },
-            ]
-          working_directory: ./AppleStockAPI
-          extra_plugins: |
-            @semantic-release/commit-analyzer
-            @semantic-release/release-notes-generator
-            @semantic-release/github
-            @semantic-release/git
-            @semantic-release/exec
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Versionize
+        run: dotnet tool install --global Versionize
+      - name: Setup git
+        run: |
+            git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+
+      - name: Versionize Release Main
+        if: ${{ env.GITHUB_REF_NAME }} == 'main'
+        id: versionize-main
+        run: versionize --changelog-all --exit-insignificant-commits
+        continue-on-error: true
+
+      - name: Versionize Release Develop
+        if: ${{ env.GITHUB_REF_NAME }} == 'develop'
+        id: versionize-develop
+        run: versionize --changelog-all --exit-insignificant-commits
+        continue-on-error: true
+
+      - name: No release required
+        if: steps.versionize.outcome != 'success'
+        run: echo "Skipping publishing. No release required."
 
       # Login against a Docker registry
       # https://github.com/docker/login-action
       - name: Log into registry ${{ env.REGISTRY }}
+        if: steps.versionize.outcome == 'success'
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
           registry: ${{ env.REGISTRY }}
@@ -72,6 +74,7 @@ jobs:
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
       - name: Extract Docker metadata
+        if: steps.versionize.outcome == 'success'
         id: meta
         uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
         with:
@@ -80,6 +83,7 @@ jobs:
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
       - name: Build and push Docker image
+        if: steps.versionize.outcome == 'success'
         id: build-and-push
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
