@@ -28,3 +28,4 @@ app.MapGet("/stocks", async (StockDb db) => await db.Stocks.ToListAsync());
 app.MapPost("/bid", (Bid payload) => BidController.handleBid(payload, bids));
 app.Run();
 
+public partial class Program { }
