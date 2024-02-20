@@ -7,8 +7,8 @@ name: Docker Release
 
 on:
   workflow_run:
-    workflows: [CI]
-    types: [completed]
+    workflows: CI
+    types: completed
     branches: [master, develop]
 
 env:
@@ -30,38 +30,27 @@ jobs:
       id-token: write
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: '0'
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
 
-      - name: Install Versionize
-        run: dotnet tool install --global Versionize
-      - name: Setup git
-        run: |
-            git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git config --local user.name "github-actions[bot]"
-
-      - name: Versionize Release Main
-        if: ${{ env.GITHUB_REF_NAME }} == 'main'
-        id: versionize-main
-        run: versionize --changelog-all --exit-insignificant-commits
-        continue-on-error: true
-
-      - name: Versionize Release Develop
-        if: ${{ env.GITHUB_REF_NAME }} == 'develop'
-        id: versionize-develop
-        run: versionize --changelog-all --exit-insignificant-commits
-        continue-on-error: true
-
-      - name: No release required
-        if: steps.versionize.outcome != 'success'
-        run: echo "Skipping publishing. No release required."
+      - name: Semantic Release
+        id: release
+        uses: cycjimmy/semantic-release-action@v3
+        with:
+          working_directory: ./AppleStockAPI
+          extra_plugins: |
+            @semantic-release/commit-analyzer
+            @semantic-release/release-notes-generator
+            @semantic-release/github
+            @semantic-release/git
+            @semantic-release/exec
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Login against a Docker registry
       # https://github.com/docker/login-action
