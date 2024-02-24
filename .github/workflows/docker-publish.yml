@@ -6,10 +6,10 @@ name: Docker Release
 # documentation.
 
 on:
-  push:
-    branches: ["main", "develop"]
-    # Publish semver tags as releases.
-    tags: ["v*.*.*"]
+  workflow_run:
+    workflows: CI
+    types: completed
+    branches: [master, develop]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -20,30 +20,41 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
-      contents: read
+      contents: write
       packages: write
       # This is used to complete the identity challenge
       # with sigstore/fulcio when running outside of PRs.
       id-token: write
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Make the script files executable
+        run: chmod +x updateVersion.sh
 
       - name: Semantic Release
         id: release
         uses: cycjimmy/semantic-release-action@v4
         with:
           branches: |
-            [
-              '+([0-9])?(.{+([0-9]),x}).x',
-              'main',
-              {
-                name: 'develop',
-                prerelease: true
-              },
-            ]
+              [
+                '+([0-9])?(.{+([0-9]),x}).x',
+                'main',
+                {
+                  name: 'develop',
+                  prerelease: true
+                },
+              ]
           working_directory: ./AppleStockAPI
           extra_plugins: |
             @semantic-release/commit-analyzer
