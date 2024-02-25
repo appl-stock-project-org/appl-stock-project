@@ -89,7 +89,7 @@ namespace AppleStockAPI.Test
                     new Bid { Price = 588.6, Quantity = 6 }, 
                     new Response { 
                         ErrorMessage = null, 
-                        SuccessMessage = "Bid placed succesfully with price 588,6 and quantity 6.", 
+                        SuccessMessage = $"Bid placed succesfully with price {588.6} and quantity 6.", 
                         Success = true
                         },
                     5
@@ -99,7 +99,7 @@ namespace AppleStockAPI.Test
                     new Bid { Price = 719.4, Quantity = 6 }, 
                     new Response { 
                         ErrorMessage = null, 
-                        SuccessMessage = "Bid placed succesfully with price 719,4 and quantity 6.", 
+                        SuccessMessage = $"Bid placed succesfully with price {719.4} and quantity 6.", 
                         Success = true
                         },
                     6
@@ -109,7 +109,7 @@ namespace AppleStockAPI.Test
                     new Bid { Price = 111.11, Quantity = 11 }, 
                     new Response { 
                         ErrorMessage = null, 
-                        SuccessMessage = "Bid placed succesfully with price 111,11 and quantity 11.", 
+                        SuccessMessage = $"Bid placed succesfully with price {111.11} and quantity 11.", 
                         Success = true
                         },
                     7
@@ -129,7 +129,7 @@ namespace AppleStockAPI.Test
                     new Bid { Price = 122.22, Quantity = 11 }, 
                     new Response { 
                         ErrorMessage = null, 
-                        SuccessMessage = "Bid placed succesfully with price 122,22 and quantity 11.", 
+                        SuccessMessage = $"Bid placed succesfully with price {122.22} and quantity 11.", 
                         Success = true
                         },
                     9
@@ -139,7 +139,7 @@ namespace AppleStockAPI.Test
                     new Bid { Price = 122.2211111111, Quantity = 11 }, 
                     new Response { 
                         ErrorMessage = null, 
-                        SuccessMessage = "Bid placed succesfully with price 122,22 and quantity 11.", 
+                        SuccessMessage = $"Bid placed succesfully with price {122.22} and quantity 11.", 
                         Success = true
                         },
                     10
