@@ -15,7 +15,9 @@ var app = builder.Build();
 List<Bid> bids = new List<Bid>();
 
 app.MapGet("/", () => "Hello World!");
-app.MapGet("/stocks", async (StockDb db) => await db.Stocks.ToListAsync());
+
+var tradeController = new TradeController();
+app.MapGet("/trades", () => tradeController.ListTrades());
 
 
 /*

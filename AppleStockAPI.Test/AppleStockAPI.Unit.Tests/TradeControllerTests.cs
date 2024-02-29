@@ -1,6 +1,8 @@
 ﻿using AppleStockAPI.Controllers;
 using AppleStockAPI.Models;
 using System.Diagnostics;
+using System;
+using System.Globalization;
 
 namespace AppleStockAPI.Test
 {
@@ -56,6 +58,26 @@ namespace AppleStockAPI.Test
 
             controller.ClearTrades();
             Assert.That(controller.GetTrades().Count(), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ListTrades_TradesList()
+        {
+            controller.RecordTrade(2.0, 1);
+            controller.RecordTrade(1.0, 2);
+            controller.RecordTrade(4.0, 5);
+
+            var list = controller.ListTrades();
+
+            Assert.Greater(list[1].TradeTime, list[0].TradeTime);
+        }
+
+        [Test]
+        public void ListTrades_EmptyTradesList()
+        {
+            var list = controller.ListTrades();
+
+            Assert.That(list.Count, Is.EqualTo(0));
         }
     }
 }
