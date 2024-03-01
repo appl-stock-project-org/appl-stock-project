@@ -13,12 +13,11 @@ var app = builder.Build();
 // Let's leave the above db scaffolding as an example for now, in case we want to use it afterall.
 // It does look quite simple, I just did the List implementation for a start
 List<Bid> bids = new List<Bid>();
-List<Offer> offers = new List<Offer>();
 
 app.MapGet("/", () => "Hello World!");
 app.MapGet("/stocks", async (StockDb db) => await db.Stocks.ToListAsync());
 
-
+OfferController offerController = new OfferController();
 
 
 
@@ -30,6 +29,6 @@ app.MapGet("/stocks", async (StockDb db) => await db.Stocks.ToListAsync());
     }
 */
 app.MapPost("/bid", (Bid payload) => BidController.handleBid(payload, bids));
-app.MapPost("/offer", (Offer payload) => OfferController.handleOffer(payload, offers));
+app.MapPost("/offer", (Offer payload) => OfferController.HandleOffer(payload, offerController.GetOffers()));
 app.Run();
 

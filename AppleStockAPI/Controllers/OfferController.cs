@@ -15,15 +15,33 @@ namespace AppleStockAPI.Controllers
 {
     public class OfferController
     {
+
+        private List<Offer> offers;
+
+        public OfferController()
+        {
+        offers = new List<Offer>();
+        }
+
+        public List<Offer> GetOffers()
+        {
+            return offers;
+        }
+
+        public void ClearOffers()
+        {
+           offers.Clear();
+        }
+
         // Offer response handling, creates the response, formats the offer price accordingly and calls to check the offer.
-        public static Response handleOffer(Offer offer, List<Offer> Offers)
+        public static Response HandleOffer(Offer offer, List<Offer> Offers)
         {
 
             Response response = new Response();
             offer.Price = Math.Truncate(offer.Price * 100) / 100;
             Console.WriteLine(offer.Price);
 
-            checkOffer(offer, response);
+            CheckOffer(offer, response);
 
             return response;
 
@@ -31,24 +49,24 @@ namespace AppleStockAPI.Controllers
 
 
         // Checks the offer price and quantity validity, and sets the correct response message.
-        public static bool checkOffer(Offer offer, Response response)
+        public static bool CheckOffer(Offer offer, Response response)
         {
-            if (checkOfferQuantity(offer.Quantity) && checkOfferPrice(offer.Price))
+            if (CheckOfferQuantity(offer.Quantity) && CheckOfferPrice(offer.Price))
             {
                 response.Success = true;
-                response.SuccessMessage = $"Offer succesful with the price of {offer.Price}, and quantity of {offer.Quantity}";
+                response.SuccessMessage = $"Offer succesful with the price of {offer.Price} and quantity of {offer.Quantity}";
             }
-            else if (!checkOfferPrice(offer.Price) && !checkOfferQuantity(offer.Quantity))
+            else if (!CheckOfferPrice(offer.Price) && !CheckOfferQuantity(offer.Quantity))
             {
                 response.Success = false;
                 response.ErrorMessage = "Something went terribly wrong, offer quantity AND offer price were invalid";
             }
-            else if (!checkOfferQuantity(offer.Quantity))
+            else if (!CheckOfferQuantity(offer.Quantity))
             {
                 response.Success = false;
                 response.ErrorMessage = $"Offer quantity invalid, offer should contain a quantity of larger than 0";
             }
-            else if (!checkOfferPrice(offer.Price))
+            else if (!CheckOfferPrice(offer.Price))
             {
                 response.Success = false;
                 response.ErrorMessage = $"Offer rejected with the value of {offer.Price}, offer needs to be in the price range of 10% of the market price";
@@ -59,27 +77,19 @@ namespace AppleStockAPI.Controllers
 
 
         // Checks that offer has a quantity larger than 0
-        public static bool checkOfferQuantity(int offerQuantity)
+        public static bool CheckOfferQuantity(int offerQuantity)
         {
-            if (offerQuantity > 0) return true;
-            return false;
+            return offerQuantity > 0;
         }
 
         // Checks that the offer has a valid price
-        public static bool checkOfferPrice(double offerPrice)
+        public static bool CheckOfferPrice(double offerPrice)
         {
             const double MOCKPRICE = 100;
             double highestValid = Math.Round(MOCKPRICE * 1.1, 2);
             double lowestValid = Math.Round(MOCKPRICE * 0.9, 2);
 
-            if (offerPrice <= highestValid && offerPrice >= lowestValid)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return (offerPrice <= highestValid && offerPrice >= lowestValid);
         }
 
     }
