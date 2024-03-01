@@ -10,4 +10,4 @@ Scenario: Add a trade
 	Given the trade price is 3.0
 	And the trade quantity is 2
 	When the trade is added
-	Then the result should be 120
+	Then the result should be 1

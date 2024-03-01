@@ -44,7 +44,7 @@ namespace SpecFlowAppleStock.StepDefinitions
         {
             //TODO: implement assert (verification) logic
 
-            controller.GetTrades().Count.Should().Be(1);
+            controller.GetTrades().Count.Should().Be(result);
         }
     }
 }
