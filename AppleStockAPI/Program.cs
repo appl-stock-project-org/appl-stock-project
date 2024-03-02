@@ -30,3 +30,4 @@ app.MapGet("/trades", () => tradeController.ListTrades());
 app.MapPost("/bid", (Bid payload) => BidController.handleBid(payload, bids));
 app.Run();
 
+public partial class Program { }
