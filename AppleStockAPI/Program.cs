@@ -11,15 +11,16 @@ builder.Services.AddSqlite<StockDb>(connectionString);
 var app = builder.Build();
 
 // Let's leave the above db scaffolding as an example for now, in case we want to use it afterall.
-// It does look quite simple, I just did the List implementation for a start
-List<Bid> bids = new List<Bid>();
 
 app.MapGet("/", () => "Hello World!");
 
 var tradeController = new TradeController();
 app.MapGet("/trades", () => tradeController.ListTrades());
 
+// This starts the hourly API requests and saves the price to itself. Give this to the "system controller" also
+ExternalCallController apiCaller = new();
 
+BidController bidController = new();
 /*
     Example POST request body/payload to endpoint "/bid"
     {
@@ -27,7 +28,8 @@ app.MapGet("/trades", () => tradeController.ListTrades());
         "quantity": 30
     }
 */
-app.MapPost("/bid", (Bid payload) => BidController.handleBid(payload, bids));
+const double MOCK_PRICE = 100;
+app.MapPost("/bid", (Bid payload) => bidController.HandleBid(payload, MOCK_PRICE));
 app.Run();
 
 public partial class Program { }
