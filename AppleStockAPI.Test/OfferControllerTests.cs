@@ -1,104 +1,69 @@
 ﻿using NUnit.Framework;
 using AppleStockAPI.Controllers;
 using AppleStockAPI.Models;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Routing;
+using System;
 
 namespace AppleStockAPI.Tests
 {
     [TestFixture]
     public class OfferControllerTests
     {
-        private List<Offer> offers;
         private OfferController offerController;
 
         [SetUp]
         public void SetUp()
         {
-            offers = new List<Offer>();
             offerController = new OfferController();
         }
 
         [TearDown]
         public void TearDown()
         {
-            offers = null;
-            offerController = null;
+            offerController.ClearOffers();
         }
 
         [Test]
-        public void HandleOffer_ValidOffer_ReturnsSuccessResponse()
+        public void HandleOffer_ValidOffer_SuccessResponse()
         {
-            Offer offer = new Offer { Price = 95.0, Quantity = 10 };
-            Response response = OfferController.HandleOffer(offer, offers);
+            Offer offer = new Offer { Quantity = 10, Price = 95.0 }; 
+            Response response = offerController.HandleOffer(offer);
 
             Assert.IsTrue(response.Success);
             Assert.AreEqual($"Offer succesful with the price of {offer.Price} and quantity of {offer.Quantity}", response.SuccessMessage);
+            CollectionAssert.Contains(offerController.GetOffers(), offer);
         }
 
         [Test]
-        public void HandleOffer_InvalidPrice_ReturnsErrorResponse()
+        public void HandleOffer_InvalidPrice_ErrorMessage()
         {
-            Offer offer = new Offer { Price = 120.0, Quantity = 10 };
-            Response response = OfferController.HandleOffer(offer, offers);
+            Offer offer = new Offer { Quantity = 10, Price = 80.0 };
+            Response response = offerController.HandleOffer(offer);
 
             Assert.IsFalse(response.Success);
             Assert.AreEqual($"Offer rejected with the value of {offer.Price}, offer needs to be in the price range of 10% of the market price", response.ErrorMessage);
+            CollectionAssert.DoesNotContain(offerController.GetOffers(), offer);
         }
 
         [Test]
-        public void HandleOffer_InvalidQuantity_ReturnsErrorResponse()
+        public void HandleOffer_InvalidQuantity_ErrorMessage()
         {
-            Offer offer = new Offer { Price = 95.0, Quantity = -5 };
-            Response response = OfferController.HandleOffer(offer, offers);
+            Offer offer = new Offer { Quantity = 0, Price = 95.0 };
+            Response response = offerController.HandleOffer(offer);
 
             Assert.IsFalse(response.Success);
-            Assert.AreEqual($"Offer quantity invalid, offer should contain a quantity of larger than 0", response.ErrorMessage);
+            Assert.AreEqual("Offer quantity invalid, offer should contain a quantity of larger than 0", response.ErrorMessage);
+            CollectionAssert.DoesNotContain(offerController.GetOffers(), offer);
         }
 
         [Test]
-        public void CheckOfferPrice_ValidPrice_ReturnsTrue()
+        public void HandleOffer_InvalidPriceAndQuantity_ErrorMessage()
         {
-            double validPrice = 105.0;
-            bool result = OfferController.CheckOfferPrice(validPrice);
+            Offer offer = new Offer { Quantity = 0, Price = 80.0 };
+            Response response = offerController.HandleOffer(offer);
 
-            Assert.IsTrue(result);
-        }
-
-        [Test]
-        public void CheckOfferPrice_InvalidPrice_ReturnsFalse()
-        {
-            double invalidPrice = 120.0;
-            bool result = OfferController.CheckOfferPrice(invalidPrice);
-
-            Assert.IsFalse(result);
-        }
-
-        [Test]
-        public void CheckOfferQuantity_ValidQuantity_ReturnsTrue()
-        {
-            int validQuantity = 5;
-            bool result = OfferController.CheckOfferQuantity(validQuantity);
-
-            Assert.IsTrue(result);
-        }
-
-        [Test]
-        public void CheckOfferQuantity_InvalidQuantity_ReturnsFalse()
-        {
-            int invalidQuantity = -5;
-            bool result = OfferController.CheckOfferQuantity(invalidQuantity);
-
-            Assert.IsFalse(result);
-        }
-
-        [Test]
-        public void GetOffers_AfterClearing_ReturnsEmptyList()
-        {
-            offerController.ClearOffers();
-            List<Offer> result = offerController.GetOffers();
-
-            Assert.IsEmpty(result);
+            Assert.IsFalse(response.Success);
+            Assert.AreEqual("Something went terribly wrong, offer quantity AND offer price were invalid", response.ErrorMessage);
+            CollectionAssert.DoesNotContain(offerController.GetOffers(), offer);
         }
     }
 }

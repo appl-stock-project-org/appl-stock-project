@@ -5,7 +5,7 @@ using AppleStockAPI.Models;
 
 /**
  * 
- * Handles and validates place offers and its responses.
+ * Handles and validates placed offers, stores them into offers list and handles the correct responses.
  * 
  */
 
@@ -33,28 +33,24 @@ namespace AppleStockAPI.Controllers
            offers.Clear();
         }
 
-        // Offer response handling, creates the response, formats the offer price accordingly and calls to check the offer.
-        public static Response HandleOffer(Offer offer, List<Offer> Offers)
+        // Formats the offer price accordingly and calls to check the offer.
+        public Response HandleOffer(Offer offer)
         {
-
-            Response response = new Response();
             offer.Price = Math.Truncate(offer.Price * 100) / 100;
-            Console.WriteLine(offer.Price);
 
-            CheckOffer(offer, response);
-
-            return response;
-
+            return CheckOffer(offer);
         }
 
 
-        // Checks the offer price and quantity validity, and sets the correct response message.
-        public static bool CheckOffer(Offer offer, Response response)
+        // Creates a response, checks the offer price and quantity validity, returns the response.
+        public Response CheckOffer(Offer offer)
         {
+            Response response = new Response();
             if (CheckOfferQuantity(offer.Quantity) && CheckOfferPrice(offer.Price))
             {
                 response.Success = true;
                 response.SuccessMessage = $"Offer succesful with the price of {offer.Price} and quantity of {offer.Quantity}";
+                offers.Add(offer);
             }
             else if (!CheckOfferPrice(offer.Price) && !CheckOfferQuantity(offer.Quantity))
             {
@@ -72,18 +68,18 @@ namespace AppleStockAPI.Controllers
                 response.ErrorMessage = $"Offer rejected with the value of {offer.Price}, offer needs to be in the price range of 10% of the market price";
             }
 
-            return response.Success;
+            return response;
         }
 
 
         // Checks that offer has a quantity larger than 0
-        public static bool CheckOfferQuantity(int offerQuantity)
+        public bool CheckOfferQuantity(int offerQuantity)
         {
             return offerQuantity > 0;
         }
 
         // Checks that the offer has a valid price
-        public static bool CheckOfferPrice(double offerPrice)
+        public bool CheckOfferPrice(double offerPrice)
         {
             const double MOCKPRICE = 100;
             double highestValid = Math.Round(MOCKPRICE * 1.1, 2);

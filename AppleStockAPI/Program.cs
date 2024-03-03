@@ -17,9 +17,6 @@ List<Bid> bids = new List<Bid>();
 app.MapGet("/", () => "Hello World!");
 app.MapGet("/stocks", async (StockDb db) => await db.Stocks.ToListAsync());
 
-OfferController offerController = new OfferController();
-
-
 
 /*
     Example POST request body/payload to endpoint "/bid"
@@ -29,6 +26,6 @@ OfferController offerController = new OfferController();
     }
 */
 app.MapPost("/bid", (Bid payload) => BidController.handleBid(payload, bids));
-app.MapPost("/offer", (Offer payload) => OfferController.HandleOffer(payload, offerController.GetOffers()));
+app.MapPost("/offer", (Offer payload) => { var offerController = new OfferController(); return offerController.HandleOffer(payload); });
 app.Run();
 
