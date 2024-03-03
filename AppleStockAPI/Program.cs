@@ -32,3 +32,4 @@ const double MOCK_PRICE = 100;
 app.MapPost("/bid", (Bid payload) => bidController.HandleBid(payload, MOCK_PRICE));
 app.Run();
 
+public partial class Program { }
