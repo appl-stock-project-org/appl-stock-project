@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using AppleStockAPI.Controllers;
 using AppleStockAPI.Models;
-using System;
+using System.Collections.Generic;
 
 namespace AppleStockAPI.Tests
 {
@@ -25,29 +25,35 @@ namespace AppleStockAPI.Tests
         [Test]
         public void HandleOffer_ValidOffer_SuccessResponse()
         {
-            Offer offer = new Offer { Quantity = 10, Price = 95.0 }; 
+            const int expectedQuantity = 10;
+            const double expectedPrice = 95.6;
+            Offer offer = new Offer { Quantity = expectedQuantity, Price = expectedPrice };
             Response response = offerController.HandleOffer(offer);
 
             Assert.IsTrue(response.Success);
-            Assert.AreEqual($"Offer succesful with the price of {offer.Price} and quantity of {offer.Quantity}", response.SuccessMessage);
+            Assert.AreEqual($"Offer successful with the price of {expectedPrice} and quantity of {expectedQuantity}", response.SuccessMessage);
             CollectionAssert.Contains(offerController.GetOffers(), offer);
         }
 
         [Test]
         public void HandleOffer_InvalidPrice_ErrorMessage()
         {
-            Offer offer = new Offer { Quantity = 10, Price = 80.0 };
+            const int quantity = 10;
+            const double invalidPrice = 80.0;
+            Offer offer = new Offer { Quantity = quantity, Price = invalidPrice };
             Response response = offerController.HandleOffer(offer);
 
             Assert.IsFalse(response.Success);
-            Assert.AreEqual($"Offer rejected with the value of {offer.Price}, offer needs to be in the price range of 10% of the market price", response.ErrorMessage);
+            Assert.AreEqual($"Offer rejected with the value of {invalidPrice}, offer needs to be in the price range of 10% of the market price", response.ErrorMessage);
             CollectionAssert.DoesNotContain(offerController.GetOffers(), offer);
         }
 
         [Test]
         public void HandleOffer_InvalidQuantity_ErrorMessage()
         {
-            Offer offer = new Offer { Quantity = 0, Price = 95.0 };
+            const int invalidQuantity = 0;
+            const double price = 95.0;
+            Offer offer = new Offer { Quantity = invalidQuantity, Price = price };
             Response response = offerController.HandleOffer(offer);
 
             Assert.IsFalse(response.Success);
@@ -58,7 +64,9 @@ namespace AppleStockAPI.Tests
         [Test]
         public void HandleOffer_InvalidPriceAndQuantity_ErrorMessage()
         {
-            Offer offer = new Offer { Quantity = 0, Price = 80.0 };
+            const int invalidQuantity = 0;
+            const double invalidPrice = 80.0;
+            Offer offer = new Offer { Quantity = invalidQuantity, Price = invalidPrice };
             Response response = offerController.HandleOffer(offer);
 
             Assert.IsFalse(response.Success);
@@ -67,4 +75,5 @@ namespace AppleStockAPI.Tests
         }
     }
 }
+
 

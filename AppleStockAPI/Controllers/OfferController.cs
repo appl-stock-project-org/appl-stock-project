@@ -49,8 +49,9 @@ namespace AppleStockAPI.Controllers
             if (CheckOfferQuantity(offer.Quantity) && CheckOfferPrice(offer.Price))
             {
                 response.Success = true;
-                response.SuccessMessage = $"Offer succesful with the price of {offer.Price} and quantity of {offer.Quantity}";
+                response.SuccessMessage = $"Offer successful with the price of {offer.Price} and quantity of {offer.Quantity}";
                 offers.Add(offer);
+
             }
             else if (!CheckOfferPrice(offer.Price) && !CheckOfferQuantity(offer.Quantity))
             {
@@ -81,6 +82,7 @@ namespace AppleStockAPI.Controllers
         // Checks that the offer has a valid price
         public bool CheckOfferPrice(double offerPrice)
         {
+            //TODO: fix mockprice
             const double MOCKPRICE = 100;
             double highestValid = Math.Round(MOCKPRICE * 1.1, 2);
             double lowestValid = Math.Round(MOCKPRICE * 0.9, 2);
