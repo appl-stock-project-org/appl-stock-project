@@ -23,11 +23,13 @@ namespace AppleStockAPI.Controllers
         offers = new List<Offer>();
         }
 
+        // Returns all the offers from the offers list
         public List<Offer> GetOffers()
         {
             return offers;
         }
 
+        // Clears all offers from the offers list
         public void ClearOffers()
         {
            offers.Clear();
@@ -39,6 +41,23 @@ namespace AppleStockAPI.Controllers
             offer.Price = Math.Truncate(offer.Price * 100) / 100;
 
             return CheckOffer(offer);
+        }
+
+        // Fetches an offer from the offers list based on its id
+        public Offer GetOffer(Guid id)
+        {
+            return offers.Find(offer => offer.Id == id);
+        }
+
+        // Removes an offer from the offers list based on its id
+        public void RemoveOffer(Guid id)
+        {
+            Offer removableOffer = GetOffer(id);
+            if (removableOffer != null)
+            {
+                offers.Remove(removableOffer);
+            }
+            return;
         }
 
 
