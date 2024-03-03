@@ -51,6 +51,12 @@ If you wish, you can install Sqlite studio to manage the db:
 https://sqlitestudio.pl/
 
 
+** SpecFlow
+The current version of SpecFlow does not support .NET 8.
+
+This project uses another release of SpecFlow:
+https://github.com/SpecFlowOSS/SpecFlow.VS/releases/tag/v2022.1.93-net8
+
 ** Readme comments
 Readme file contains more info about creation steps of this project,
 so you might want to inspect it more.
