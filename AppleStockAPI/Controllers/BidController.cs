@@ -21,7 +21,7 @@ namespace AppleStockAPI.Controllers
 
 			Response response = new();
 
-			bid.Price = Math.Round(bid.Price, 2);
+			bid.Price = Math.Truncate(bid.Price * 100) / 100;
 
 
 			double lowestAccepted = Math.Round(currentStockPrice * 0.9, 2);
@@ -53,29 +53,20 @@ namespace AppleStockAPI.Controllers
 		}
 
 		/// <summary>
-		/// Returns a bid that matches given string id
-		/// </summary>
-		/// <param name="id">Bid id</param>
-		/// <returns>A bid, if bids has a bid with given string id</returns>
-		public Bid? GetBidWithId(string id) {
-			return bids.Find(bid => bid.Id.ToString() == id);
-		}
-
-		/// <summary>
 		/// Returns a bid that matches given Guid id
 		/// </summary>
 		/// <param name="id">Bid id</param>
 		/// <returns>A bid, if bids has a bid with given Guid id</returns>
 		public Bid? GetBidWithId(Guid id) {
-			return GetBidWithId(id.ToString());
+			return bids.Find(bid => bid.Id == id);
 		}
 
 		/// <summary>
 		/// Removes a bid that matches the given id.
 		/// </summary>
-		/// <param name="id">String id of the bid that is wanted to be removed</param>
+		/// <param name="id">Id of the bid that is wanted to be removed</param>
 		/// <returns>An error message, if a bid with the give id was not found. If no errors returns void</returns>
-		public string? RemoveBidWithId(string id) {
+		public string? RemoveBidWithId(Guid id) {
 			Bid? targetBid = GetBidWithId(id);
 			if (targetBid == null) {
 				return $"Bid with id {id} was not found.";
