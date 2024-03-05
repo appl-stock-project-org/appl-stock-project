@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Enable sqlite with connection string and builder
 var connectionString = builder.Configuration.GetConnectionString("Stock") ?? "Data Source=Stock.db";
 builder.Services.AddSqlite<StockDb>(connectionString);
+builder.Services.AddSingleton<OfferController>();
 
 var app = builder.Build();
 
@@ -28,6 +29,9 @@ BidController bidController = new();
         "quantity": 30
     }
 */
+
+
+app.MapPost("/offer", (Offer payload, OfferController offerController) => offerController.HandleOffer(payload));
 const double MOCK_PRICE = 100;
 app.MapPost("/bid", (Bid payload) => bidController.HandleBid(payload, MOCK_PRICE));
 app.Run();
