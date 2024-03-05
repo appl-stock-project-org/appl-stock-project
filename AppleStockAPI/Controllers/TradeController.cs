@@ -25,7 +25,7 @@ namespace AppleStockAPI.Controllers
         {
             if (price <= 0 || quantity <= 0) return;
             var trade = new Trade()
-            { 
+            {
                 Price = price,
                 Quantity = quantity,
             };

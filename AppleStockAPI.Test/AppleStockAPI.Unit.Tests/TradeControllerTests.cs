@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System;
 using System.Globalization;
 
-namespace AppleStockAPI.Test
+namespace AppleStockAPI.Unit.Tests
 {
     public class TradeControllerTests
     {
