@@ -35,7 +35,7 @@ namespace AppleStockAPI.Integration.Tests
             
             // Check for success response
             Assert.IsTrue(response.Success);
-            Assert.That(response.SuccessMessage, Is.EqualTo($"Offer successfully placed with the price of {validOffer.Price} and quantity of {validOffer.Quantity}"));
+            Assert.That(response.SuccessMessage, Is.EqualTo($"Offer successfully placed with the price of {validOffer.Price} and quantity of {validOffer.Quantity}."));
 
             // Check that only one offer was added and no bids or trades
             Assert.That(controller.ListOffers().Count, Is.EqualTo(1));
@@ -51,7 +51,7 @@ namespace AppleStockAPI.Integration.Tests
 
             // Check for success response
             Assert.IsTrue(response.Success);
-            Assert.That(response.SuccessMessage, Is.EqualTo($"Bid successfully placed with the price of {validBid.Price} and quantity of {validBid.Quantity}"));
+            Assert.That(response.SuccessMessage, Is.EqualTo($"Bid successfully placed with the price of {validBid.Price} and quantity of {validBid.Quantity}."));
 
             // Check that only one bid was added and no offers or trades
             Assert.That(controller.ListBids().Count, Is.EqualTo(1));
