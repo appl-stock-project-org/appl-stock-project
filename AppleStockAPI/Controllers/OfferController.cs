@@ -20,13 +20,26 @@ namespace AppleStockAPI.Controllers
 
         public OfferController()
         {
-        offers = new List<Offer>();
+            offers = new List<Offer>();
         }
 
         // Returns all the offers from the offers list
         public List<Offer> GetOffers()
         {
             return offers;
+        }
+
+        /// <summary>
+        /// Returns all of the offers that have a smaller or the same price as the given price, in ascending order by price and date
+        /// </summary>
+        /// <param name="price"></param>
+        /// <returns>List of orders that match the given price</returns>
+        public List<Offer> GetValidOffers(double price)
+        {
+
+            List<Offer> validOffers = offers.FindAll(offer => offer.Price <= price);
+
+            return validOffers.OrderBy(offer => offer.Price).ThenBy(offer => offer.CreatedAt).ToList();
         }
 
         // Clears all offers from the offers list
@@ -36,17 +49,39 @@ namespace AppleStockAPI.Controllers
         }
 
         // Formats the offer price accordingly and calls to check the offer.
-        public Response HandleOffer(Offer offer)
+        public void ValidateOffer(Offer offer, double currentStockPrice)
         {
             offer.Price = Math.Truncate(offer.Price * 100) / 100;
 
-            return CheckOffer(offer);
+            if (!CheckOfferPrice(offer.Price, currentStockPrice) && !CheckOfferQuantity(offer.Quantity))
+            {
+                throw new Exception("Something went terribly wrong, offer quantity AND offer price were invalid");
+            }
+            else if (!CheckOfferQuantity(offer.Quantity))
+            {
+                throw new Exception("Offer quantity invalid, offer should contain a quantity of larger than 0");
+            }
+            else if (!CheckOfferPrice(offer.Price, currentStockPrice))
+            {
+                throw new Exception($"Offer rejected with the value of {offer.Price}, offer needs to be in the price range of 10% of the market price");
+            }
+
+            return;
         }
 
         // Fetches an offer from the offers list based on its id
         public Offer GetOffer(Guid id)
         {
             return offers.Find(offer => offer.Id == id);
+        }
+
+        /// <summary>
+        /// Adds an offer to the offers list
+        /// </summary>
+        /// <param name="offer">Offer to add to the list</param>
+        public void AddOffer(Offer offer)
+        {
+            offers.Add(offer);
         }
 
         // Removes an offer from the offers list based on its id
@@ -60,38 +95,6 @@ namespace AppleStockAPI.Controllers
             return;
         }
 
-
-        // Creates a response, checks the offer price and quantity validity, returns the response.
-        public Response CheckOffer(Offer offer)
-        {
-            Response response = new Response();
-            if (CheckOfferQuantity(offer.Quantity) && CheckOfferPrice(offer.Price))
-            {
-                response.Success = true;
-                response.SuccessMessage = $"Offer successful with the price of {offer.Price} and quantity of {offer.Quantity}";
-                offers.Add(offer);
-
-            }
-            else if (!CheckOfferPrice(offer.Price) && !CheckOfferQuantity(offer.Quantity))
-            {
-                response.Success = false;
-                response.ErrorMessage = "Something went terribly wrong, offer quantity AND offer price were invalid";
-            }
-            else if (!CheckOfferQuantity(offer.Quantity))
-            {
-                response.Success = false;
-                response.ErrorMessage = $"Offer quantity invalid, offer should contain a quantity of larger than 0";
-            }
-            else if (!CheckOfferPrice(offer.Price))
-            {
-                response.Success = false;
-                response.ErrorMessage = $"Offer rejected with the value of {offer.Price}, offer needs to be in the price range of 10% of the market price";
-            }
-
-            return response;
-        }
-
-
         // Checks that offer has a quantity larger than 0
         public bool CheckOfferQuantity(int offerQuantity)
         {
@@ -99,16 +102,13 @@ namespace AppleStockAPI.Controllers
         }
 
         // Checks that the offer has a valid price
-        public bool CheckOfferPrice(double offerPrice)
+        public bool CheckOfferPrice(double offerPrice, double stockPrice)
         {
-            //TODO: fix mockprice
-            const double MOCKPRICE = 100;
-            double highestValid = Math.Round(MOCKPRICE * 1.1, 2);
-            double lowestValid = Math.Round(MOCKPRICE * 0.9, 2);
+            double highestValid = Math.Round(stockPrice * 1.1, 2);
+            double lowestValid = Math.Round(stockPrice * 0.9, 2);
 
             return (offerPrice <= highestValid && offerPrice >= lowestValid);
         }
-
     }
 }
 

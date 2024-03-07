@@ -7,7 +7,7 @@ namespace AppleStockAPI.Controllers
 		private readonly List<Bid> bids;
 
 		public BidController() {
-			bids = [];
+			bids = new List<Bid>();
 		}
 
 		/// <summary>
@@ -17,9 +17,7 @@ namespace AppleStockAPI.Controllers
 		/// <param name="bid">Bid to handle</param>
 		/// <param name="currentStockPrice">Current stock price that determines the range of acceptable prices</param>
         /// </summary>
-		public Response HandleBid(Bid bid, double currentStockPrice) {
-
-			Response response = new();
+		public void ValidateBid(Bid bid, double currentStockPrice) {
 
 			bid.Price = Math.Truncate(bid.Price * 100) / 100;
 
@@ -28,26 +26,45 @@ namespace AppleStockAPI.Controllers
 			double highestAccepted = Math.Round(currentStockPrice * 1.1, 2);
 
 			if (bid.Quantity <= 0) {
-				response.ErrorMessage = $"Bid quantity needs to be above 0.";
-				response.Success = false;
+				throw new Exception("Bid quantity needs to be above 0.");
 			}
 			else if (bid.Price < lowestAccepted) {
-				response.ErrorMessage = $"Bid price is too low. Lowest accepted price at the moment is {lowestAccepted}.";
-				response.Success = false;
+				throw new Exception($"Bid price is too low. Lowest accepted price at the moment is {lowestAccepted}.");
 			}
 			else if (highestAccepted < bid.Price) {
-				response.ErrorMessage = $"Bid price is too high. Highest accepted price at the moment is {highestAccepted}.";
-				response.Success = false;
-			} else {
-				response.SuccessMessage = $"Bid placed succesfully with price {bid.Price} and quantity {bid.Quantity}.";
-				response.Success = true;
-
-				bids.Add(bid);
+				throw new Exception($"Bid price is too high. Highest accepted price at the moment is {highestAccepted}.");
 			}
 
-			return response;
+			return;
 		}
 
+        /// <summary>
+        /// Returns all of the bids that have a higher or same price as the given price limit
+        /// </summary>
+        /// <param name="price">Valid price limit</param>
+        /// <returns>List of bids that have a higher price than the limit</returns>
+        public List<Bid> GetValidBids(double price)
+        {
+
+            List<Bid> validBids = bids.FindAll(bid => bid.Price >= price);
+
+            return validBids.OrderByDescending(bid => bid.Price).ThenBy(bid => bid.CreatedAt).ToList();
+
+        }
+
+        /// <summary>
+        /// Adds a bid to the list of bids
+        /// </summary>
+        /// <param name="bid">Bid to addd to the bids list</param>
+        public void AddBid(Bid bid)
+		{
+            bids.Add(bid);
+        }
+
+		/// <summary>
+		/// Gets all current bids
+		/// </summary>
+		/// <returns></returns>
 		public List<Bid> GetBids() {
 			return bids;
 		}
@@ -75,8 +92,11 @@ namespace AppleStockAPI.Controllers
 			return null;
 		}
 
+		/// <summary>
+		/// Empties the bids list
+		/// </summary>
 		public void ClearBids() {
 			bids.Clear();
 		}
-	}
+    }
 }
