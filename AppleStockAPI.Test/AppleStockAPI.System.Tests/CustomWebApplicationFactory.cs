@@ -12,7 +12,6 @@ namespace AppleStockAPI.Test
             // For example, configure services or set environment variables.
             // You can also use this method to seed test data into your database.
 
-
             // Call the base configuration
             base.ConfigureWebHost(builder);
         }

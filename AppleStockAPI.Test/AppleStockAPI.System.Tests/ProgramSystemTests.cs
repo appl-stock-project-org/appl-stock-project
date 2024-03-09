@@ -11,11 +11,21 @@ using System.Text;
 
 namespace AppleStockAPI.Test
 {
-    public class ProgramIntegrationTests
-    {
-        private HttpClient _client;
 
-        private ExternalCallController apiCaller;
+    // Simplify the name of the static class used in all test fixtures
+    // using SR = ProgramSystemTests.SharedResouresUsedInAllClasses;
+
+    //public static class SharedResouresUsedInAllClasses
+     
+            
+
+    public class ProgramSystemTests {
+
+        protected static ExternalCallController apiCaller;
+
+        protected static CustomWebApplicationFactory<Program> factory;  // = new();
+
+        protected static HttpClient client; // = factory.CreateClient();
 
         /// <summary>
         ///  Make a POST request to the given endpoint with content of given object
@@ -23,14 +33,15 @@ namespace AppleStockAPI.Test
         /// <param name="endPoint">An endpoint of the program's own API. Example: "/bid" </param>
         /// <param name="contentObject">Object to send with the POST request.</param>
         /// <returns></returns>
-        private async Task<Response?> MakePostRequest(string endPoint, object contentObject) {
+        protected async Task<Response?> MakePostRequest(string endPoint, object contentObject)
+        {
 
             // Convert object to json formatted string
             string jsonToPost = JsonSerializer.Serialize(contentObject);
 
             // Convert json string to StringContent to pass for the post operation
-            StringContent contentToPost = new (jsonToPost, Encoding.UTF8, "application/json");
-            HttpResponseMessage httpResponse = await _client.PostAsync(endPoint, contentToPost);
+            StringContent contentToPost = new(jsonToPost, Encoding.UTF8, "application/json");
+            HttpResponseMessage httpResponse = await client.PostAsync(endPoint, contentToPost);
             httpResponse.EnsureSuccessStatusCode();
             // Read the response content
             string responseJsonString = await httpResponse.Content.ReadAsStringAsync();
@@ -39,12 +50,16 @@ namespace AppleStockAPI.Test
             return finalResponseObject;
         }
 
-        [SetUp]
+
+
+        [OneTimeSetUp]
         public async Task SetupAsync()
         {
-            var factory = new CustomWebApplicationFactory<Program>();
-            _client = factory.CreateClient();
+
             apiCaller = new();
+            factory = new();
+            client = factory.CreateClient();
+
 
             Console.WriteLine($"System Test Setup: To assure the external API request is received, delay for 5s starting at {DateTime.Now:yyyy'-'MM'-'dd'T'HH':'mm':'ss}");
             await Task.Delay(5000);
@@ -53,16 +68,25 @@ namespace AppleStockAPI.Test
             if (apiCaller.GetLastFetchedPrice() <= 0) {
                 throw new Exception("Couldn't fetch stock price from external API!");
             }
-
         }
 
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            // Dispose of any IDisposable resources here
+            client.Dispose();
+        }
+    }
+
+    [TestFixture]
+    public class SimpleCases : ProgramSystemTests {
         [Test]
         public async Task Should_Return_OK()
         {
             // Arrange (optional)
 
             // Act
-            var response = await _client.GetAsync("/");
+            var response = await client.GetAsync("/");
 
             // Assert
             var content = response.EnsureSuccessStatusCode();
@@ -76,7 +100,7 @@ namespace AppleStockAPI.Test
             // Arrange (optional)
 
             // Act
-            var response = await _client.GetAsync("/dummy");
+            var response = await client.GetAsync("/dummy");
             var content = System.Net.HttpStatusCode.NotFound;
 
             // Assert
@@ -90,7 +114,7 @@ namespace AppleStockAPI.Test
             // Arrange (optional)
 
             // Act
-            var response = await _client.GetStringAsync("/trades");
+            var response = await client.GetStringAsync("/trades");
 
             // Assert
             Assert.That(response, Is.EqualTo("[]"));
@@ -99,20 +123,28 @@ namespace AppleStockAPI.Test
         [Test, Order(2)]
         public async Task Post_Valid_Bid_Should_Return_Success()
         {
-            var bidToPost = new{ price = 179, quantity = 10 };
-            Response? response = await MakePostRequest("/bid", bidToPost);
-
-            Console.WriteLine($"Response: {response}");
-
-            // Assert.That(content, Is.EqualTo(response.StatusCode));
-        }
-
-
-        [TearDown]
-        public void TearDown()
-        {
-            // Dispose of any IDisposable resources here
-            _client.Dispose();
+            double price = apiCaller.GetLastFetchedPrice();
+            int quantity = 10;
+            var bidToPost = new{ price, quantity };
+            Response response = await (MakePostRequest("/bid", bidToPost) as Task<Response>);
+            Assert.Multiple(() =>
+            {
+                Assert.That(response.Success, Is.EqualTo(true));
+                Assert.That(response.ErrorMessage, Is.EqualTo(null));
+                Assert.That(response.SuccessMessage, Is.EqualTo($"Bid placed succesfully with price {price} and quantity {quantity}."));
+            });
         }
     }
+
+     [TestFixture]
+     public class Assignment_E2E_Tests_1 : ProgramSystemTests {
+
+         [OneTimeSetUp]
+         public void Setup()
+         {
+             var bidController = factory.Services.GetRequiredService<BidController>();
+             bidController.ClearBids();
+         }
+
+     }
 }
