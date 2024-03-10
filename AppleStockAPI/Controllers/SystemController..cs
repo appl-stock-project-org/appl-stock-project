@@ -1,6 +1,8 @@
 ﻿using AppleStockAPI.Models;
 using System;
+using System.Reflection;
 using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace AppleStockAPI.Controllers
 {
@@ -9,12 +11,12 @@ namespace AppleStockAPI.Controllers
     /// </summary>
     public class SystemController
     {
-        ExternalCallController apiCaller { get; set; }
-        double MOCK_STOCK_PRICE;
+        ExternalCallController? apiCaller { get; set; }
+        readonly double MOCK_STOCK_PRICE;
 
-        TradeController tradeController { get; set; }
-        BidController bidController { get; set; }
-        OfferController offerController { get; set; }
+        public TradeController tradeController { get; private set; }
+        public BidController bidController { get; private set; }
+        public OfferController offerController { get; private set; }
 
 
         public SystemController()
@@ -55,9 +57,21 @@ namespace AppleStockAPI.Controllers
         /// If offer price is not within +/-10% of last stock price, offer is not placed and an error message is sent in response.
         /// If offer is valid, it's matched against bids to see if a trade can be made and any excess quantity of the offer is added to the list of offers and a success message is sent in response.
         /// </summary>
-        public Response HandleOffer(Offer offer)
+        public Response HandleOffer(JsonElement obj)
         {
-            Response response = new Response();
+            Response response = new();
+            Offer offer;
+
+            try {
+                string jsonString = obj.ToString();
+                offer = JsonSerializer.Deserialize<Offer>(jsonString)!;
+            }
+            catch (Exception) {
+                response.Success = false;
+                response.ErrorMessage = "Request body didn't adhere to the structure of a valid offer.";
+                return response;
+            }
+
             double originalPrice = offer.Price;
             int originalQuantity = offer.Quantity;
 
@@ -108,6 +122,7 @@ namespace AppleStockAPI.Controllers
 
             response.Success = true;
             response.SuccessMessage = $"Offer successfully placed with the price of {originalPrice} and quantity of {originalQuantity}." + tradeMessage;
+            response.RecordId = offer.Id;
             return response;
         }
 
@@ -116,9 +131,24 @@ namespace AppleStockAPI.Controllers
 		/// If bid price is not within +/-10% of last stock price, bid is not placed and an error message is sent in response.
 		/// If the bid is valid, it's matched against offers to see if a trade can be made and any excess quantity of the bid is added to the list of bids and a success message is sent in response.
         /// </summary>
-		public Response HandleBid(Bid bid)
+		public Response HandleBid(JsonElement obj)
         {
-            Response response = new Response();
+
+            Response response = new();
+            Bid bid;
+
+            try {
+                string jsonString = obj.ToString();
+                bid = JsonSerializer.Deserialize<Bid>(jsonString)!;
+            }
+            catch (Exception) {
+                response.Success = false;
+                response.ErrorMessage = "Request body didn't adhere to the structure of a valid bid.";
+                return response;
+            }
+
+
+            
             double originalPrice = bid.Price;
             int originalQuantity = bid.Quantity;
 
@@ -169,6 +199,7 @@ namespace AppleStockAPI.Controllers
 
             response.Success = true;
             response.SuccessMessage = $"Bid successfully placed with the price of {originalPrice} and quantity of {originalQuantity}." + tradeMessage;
+            response.RecordId = bid.Id;
             return response;
         }
 

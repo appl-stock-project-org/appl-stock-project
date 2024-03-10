@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace AppleStockAPI.Models {
     /// <summary>
@@ -6,7 +7,9 @@ namespace AppleStockAPI.Models {
     /// </summary>
 	public record class Bid {
 
+        [property: JsonPropertyName("quantity")]
         public int Quantity { get; set; }
+        [property: JsonPropertyName("price")]
         public double Price { get; set; }
 
         public Guid Id { get; set; } = Guid.NewGuid();

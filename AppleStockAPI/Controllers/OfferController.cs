@@ -63,14 +63,14 @@ namespace AppleStockAPI.Controllers
             }
             else if (!CheckOfferPrice(offer.Price, currentStockPrice))
             {
-                throw new Exception($"Offer rejected with the value of {offer.Price}, offer needs to be in the price range of 10% of the market price");
+                throw new Exception($"Offer rejected with the value of {offer.Price}, offer needs to be in the price range of 10% of the market price. Current market price is {currentStockPrice}.");
             }
 
             return;
         }
 
         // Fetches an offer from the offers list based on its id
-        public Offer GetOffer(Guid id)
+        public Offer? GetOffer(Guid id)
         {
             return offers.Find(offer => offer.Id == id);
         }
@@ -87,7 +87,7 @@ namespace AppleStockAPI.Controllers
         // Removes an offer from the offers list based on its id
         public void RemoveOffer(Guid id)
         {
-            Offer removableOffer = GetOffer(id);
+            Offer? removableOffer = GetOffer(id);
             if (removableOffer != null)
             {
                 offers.Remove(removableOffer);
@@ -104,10 +104,10 @@ namespace AppleStockAPI.Controllers
         // Checks that the offer has a valid price
         public bool CheckOfferPrice(double offerPrice, double stockPrice)
         {
-            double highestValid = Math.Round(stockPrice * 1.1, 2);
-            double lowestValid = Math.Round(stockPrice * 0.9, 2);
+            double highestValid = Math.Truncate(stockPrice * 110) / 100;
+            double lowestValid = Math.Truncate(stockPrice * 90) / 100;
 
-            return (offerPrice <= highestValid && offerPrice >= lowestValid);
+            return offerPrice <= highestValid && offerPrice >= lowestValid;
         }
     }
 }

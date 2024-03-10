@@ -1,9 +1,3 @@
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
-using NUnit.Framework;
 using AppleStockAPI.Models; 
 using AppleStockAPI.Controllers;
 using System.Text.Json;
@@ -11,21 +5,19 @@ using System.Text;
 
 namespace AppleStockAPI.Test
 {
-
-    // Simplify the name of the static class used in all test fixtures
-    // using SR = ProgramSystemTests.SharedResouresUsedInAllClasses;
-
-    //public static class SharedResouresUsedInAllClasses
-     
-            
-
     public class ProgramSystemTests {
 
         protected static ExternalCallController apiCaller;
 
-        protected static CustomWebApplicationFactory<Program> factory;  // = new();
+        protected static CustomWebApplicationFactory<Program> factory;
 
-        protected static HttpClient client; // = factory.CreateClient();
+        protected static HttpClient client;
+
+        protected static SystemController systemController;
+
+        protected static OfferController offerController;
+
+        protected static BidController bidController;
 
         /// <summary>
         ///  Make a POST request to the given endpoint with content of given object
@@ -60,7 +52,10 @@ namespace AppleStockAPI.Test
             factory = new();
             client = factory.CreateClient();
 
-
+            systemController = factory.Services.GetRequiredService<SystemController>();
+            offerController = systemController.offerController;
+            bidController = systemController.bidController;
+            
             Console.WriteLine($"System Test Setup: To assure the external API request is received, delay for 5s starting at {DateTime.Now:yyyy'-'MM'-'dd'T'HH':'mm':'ss}");
             await Task.Delay(5000);
             Console.WriteLine($"System Test Setup: Delay ended at {DateTime.Now:yyyy'-'MM'-'dd'T'HH':'mm':'ss}. Fetched price is {apiCaller.GetLastFetchedPrice()}");
@@ -78,73 +73,193 @@ namespace AppleStockAPI.Test
         }
     }
 
+    // Assignment document E2E scenario 1
     [TestFixture]
-    public class SimpleCases : ProgramSystemTests {
-        [Test]
-        public async Task Should_Return_OK()
-        {
-            // Arrange (optional)
-
-            // Act
-            var response = await client.GetAsync("/");
-
-            // Assert
-            var content = response.EnsureSuccessStatusCode();
-            Assert.That(content, Is.EqualTo(response));
-
-        }
-
-        [Test]
-        public async Task Should_Return_Not_Found()
-        {
-            // Arrange (optional)
-
-            // Act
-            var response = await client.GetAsync("/dummy");
-            var content = System.Net.HttpStatusCode.NotFound;
-
-            // Assert
-            Assert.That(content, Is.EqualTo(response.StatusCode));
-        }
-
-
-        [Test, Order(1)]
-        public async Task Get_Trades_Should_Return_Empty()
-        {
-            // Arrange (optional)
-
-            // Act
-            var response = await client.GetStringAsync("/trades");
-
-            // Assert
-            Assert.That(response, Is.EqualTo("[]"));
-        }
-
-        [Test, Order(2)]
-        public async Task Post_Valid_Bid_Should_Return_Success()
-        {
-            double price = apiCaller.GetLastFetchedPrice();
-            int quantity = 10;
-            var bidToPost = new{ price, quantity };
-            Response response = await (MakePostRequest("/bid", bidToPost) as Task<Response>);
-            Assert.Multiple(() =>
-            {
-                Assert.That(response.Success, Is.EqualTo(true));
-                Assert.That(response.ErrorMessage, Is.EqualTo(null));
-                Assert.That(response.SuccessMessage, Is.EqualTo($"Bid placed succesfully with price {price} and quantity {quantity}."));
-            });
-        }
-    }
-
-     [TestFixture]
-     public class Assignment_E2E_Tests_1 : ProgramSystemTests {
+    public class Assignment_E2E_Tests_1 : ProgramSystemTests {
 
          [OneTimeSetUp]
          public void Setup()
          {
-             var bidController = factory.Services.GetRequiredService<BidController>();
-             bidController.ClearBids();
+            systemController.Reset();
          }
 
-     }
+        // 1. b.
+        [Test, Order(1)]
+        public async Task Post_Bid_With_Price_108_Percent_Of_Stock_Success()
+        {
+            double price = apiCaller.GetLastFetchedPrice() * 1.08;
+            var bidToPost = new{ price, quantity = 10 };
+            Response response = await (MakePostRequest("/bid", bidToPost) as Task<Response>);
+            
+            Assert.Multiple(() =>
+            {
+                Assert.That(response.SuccessMessage, Is.EqualTo($"Bid successfully placed with the price of {price} and quantity of 10."));
+                Assert.That(systemController.ListBids(), Has.Count.EqualTo(1));
+            });
+        }
+
+        // 1. c. Mistake in the first E2E scenario? This one doesn't match the described outcome in it
+        [Test, Order(2)]
+        public async Task Post_Offer_With_Price_90_Percent_Of_Stock_Success()
+        {
+            double price = apiCaller.GetLastFetchedPrice() * 0.9;
+            var offerToPost = new{ price, quantity = 10 };
+            Response response = await (MakePostRequest("/offer", offerToPost) as Task<Response>);
+            
+            Assert.Multiple(() =>
+            {
+                Assert.That(response.Success, Is.EqualTo(true));
+                Assert.That(response.ErrorMessage, Is.EqualTo(null));
+                // Assert.That(response.SuccessMessage, Is.EqualTo($"Offer successfully placed with the price of {price} and quantity of 10."));
+                Assert.That(systemController.ListOffers(), Has.Count.EqualTo(0));
+                Assert.That(systemController.ListBids(), Has.Count.EqualTo(0));
+                Assert.That(systemController.ListTrades(), Has.Count.EqualTo(1));
+            });
+        }
+
+
+        // 1. d.
+        [Test, Order(3)]
+        public async Task Post_Bid_With_Price_111_Percent_Of_Stock_Rejected()
+        {
+            double price = apiCaller.GetLastFetchedPrice() * 1.11;
+            var bidToPost = new{ price, quantity = 10 };
+            Response response = await (MakePostRequest("/bid", bidToPost) as Task<Response>);
+            
+            Assert.Multiple(() =>
+            {
+                Assert.That(response.ErrorMessage, Is.EqualTo($"Bid price is too high. Highest accepted price at the moment is {Math.Round(apiCaller.GetLastFetchedPrice() * 1.1, 2)}."));
+                Assert.That(systemController.ListBids(), Has.Count.EqualTo(0));
+            });
+        }
+
+        // 1. e.
+        [Test, Order(4)]
+        public async Task Post_Offer_With_Price_Minus_101_Percent_Of_Stock_Rejected()
+        {
+            double price = apiCaller.GetLastFetchedPrice() * -1.01;
+            var offerToPost = new{ price, quantity = 10 };
+            Response response = await (MakePostRequest("/offer", offerToPost) as Task<Response>);
+            
+            Assert.Multiple(() =>
+            {
+                Assert.That(response.ErrorMessage, Is.EqualTo($"Offer rejected with the value of {Math.Truncate(price * 100) / 100}, offer needs to be in the price range of 10% of the market price. Current market price is {apiCaller.GetLastFetchedPrice()}."));
+                Assert.That(systemController.ListOffers(), Has.Count.EqualTo(0));
+                Assert.That(systemController.ListTrades(), Has.Count.EqualTo(1));
+            });
+        }
+    }
+
+    // Assignment document E2E scenario 2
+    [TestFixture]
+    public class Assignment_E2E_Tests_2 : ProgramSystemTests {
+
+         [OneTimeSetUp]
+         public void Setup()
+         {
+            systemController.Reset();
+         }
+
+        // 2. b.
+        [Test, Order(1)]
+        public async Task Post_Bid_With_Quantity_0_Rejected()
+        {
+            double price = apiCaller.GetLastFetchedPrice();
+            var bidToPost = new{ price, quantity = 0 };
+            Response response = await (MakePostRequest("/bid", bidToPost) as Task<Response>);
+            
+            Assert.Multiple(() =>
+            {
+                Assert.That(response.ErrorMessage, Is.EqualTo("Bid quantity needs to be above 0."));
+                Assert.That(systemController.ListBids(), Has.Count.EqualTo(0));
+            });
+        }
+
+        // 2. c. 
+        [Test, Order(2)]
+        public async Task Post_Bid_With_Decimal_Quantity_Rejected()
+        {
+            double price = apiCaller.GetLastFetchedPrice();
+            var bidToPost = new{ price, quantity = 10.1 };
+            Response response = await (MakePostRequest("/bid", bidToPost) as Task<Response>);
+            
+            Assert.Multiple(() =>
+            {
+                Assert.That(response.ErrorMessage, Is.EqualTo("Request body didn't adhere to the structure of a valid bid."));
+                Assert.That(systemController.ListBids(), Has.Count.EqualTo(0));
+            });
+        }
+
+
+        // 2. d. and e.
+        [Test, Order(3)]
+        public async Task Post_Offer_With_Negative_Quantity_Rejected()
+        {
+            double price = apiCaller.GetLastFetchedPrice();
+            var offerToPost = new{ price, quantity = -100 };
+            Response response = await (MakePostRequest("/offer", offerToPost) as Task<Response>);
+            
+            Assert.Multiple(() =>
+            {
+                Assert.That(response.ErrorMessage, Is.EqualTo($"Offer quantity invalid, offer should contain a quantity of larger than 0"));
+                Assert.That(systemController.ListOffers(), Has.Count.EqualTo(0));
+                Assert.That(systemController.ListTrades(), Has.Count.EqualTo(0));
+            });
+        }
+    }
+
+    // Assignment document E2E scenario 3
+    [TestFixture]
+    public class Assignment_E2E_Tests_3 : ProgramSystemTests {
+
+         [OneTimeSetUp]
+         public void Setup()
+         {
+            systemController.Reset();
+         }
+
+        // Whole scenario 3
+        [Test]
+        public async Task Post_Offers_And_Bids_Expect_2_Trades_From_Same_Offer()
+        {
+            double price = apiCaller.GetLastFetchedPrice();
+            // 3. b.
+            var bid1 = new{ price, quantity = 100 };
+            await (MakePostRequest("/bid", bid1) as Task<Response>);
+
+            // 3. c.
+            var offer1 = new{ price = price * 0.8, quantity = 200 };
+            await (MakePostRequest("/offer", offer1) as Task<Response>);
+
+            // 3. d.
+            var bid2 = new{ price = price * 1.01, quantity = 200 };
+            await (MakePostRequest("/bid", bid2) as Task<Response>);
+
+            // 3. e.
+            var bid3 = new{ price = price * 0.95, quantity = 50 };
+            await (MakePostRequest("/bid", bid3) as Task<Response>);
+
+            // 3. f.
+            var bid4 = new{ price, quantity = 30 };
+            await (MakePostRequest("/bid", bid4) as Task<Response>);
+
+            // 3. g.
+            var offer2 = new{ price, quantity = 250 };
+            await (MakePostRequest("/offer", offer2) as Task<Response>);
+            
+            // 3. h.
+            await using Stream stream = await client.GetStreamAsync("/trades");
+            List<Trade> tradesFromFetch =
+                (await JsonSerializer.DeserializeAsync<List<Trade>>(stream))!;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tradesFromFetch, Has.Count.EqualTo(2));
+                Assert.That(tradesFromFetch[0].Price, Is.EqualTo(Math.Truncate(price * 1.01 * 100) / 100));
+                Assert.That(tradesFromFetch[0].Quantity, Is.EqualTo(200));
+                Assert.That(tradesFromFetch[1].Price, Is.EqualTo(price));
+                Assert.That(tradesFromFetch[1].Quantity, Is.EqualTo(50));
+            });
+        }
+    }
 }

@@ -43,7 +43,7 @@ namespace AppleStockAPI.Unit.Tests
             Exception ex = Assert.Throws<Exception>(() => offerController.ValidateOffer(offer, mockPrice));
 
             Assert.IsNotNull(ex);
-            Assert.That(ex.Message, Is.EqualTo($"Offer rejected with the value of {invalidPrice}, offer needs to be in the price range of 10% of the market price"));
+            Assert.That(ex.Message, Is.EqualTo($"Offer rejected with the value of {invalidPrice}, offer needs to be in the price range of 10% of the market price. Current market price is {mockPrice}."));
         }
 
         [Test]

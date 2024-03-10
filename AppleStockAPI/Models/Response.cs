@@ -1,5 +1,3 @@
-using static System.DateTime;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 
@@ -14,5 +12,7 @@ namespace AppleStockAPI.Models {
         public bool Success { get; set; }
         [JsonPropertyName("successMessage")]
         public string? SuccessMessage { get; set; }
+        [JsonPropertyName("recordId")]
+        public Guid? RecordId { get; set; }
     }
 }
