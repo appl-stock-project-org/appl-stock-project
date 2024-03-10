@@ -9,7 +9,7 @@ on:
   workflow_run:
     workflows: [CI]
     types: [completed]
-    branches: [master, develop]
+    branches: [main, develop]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -46,6 +46,7 @@ jobs:
         id: release
         uses: cycjimmy/semantic-release-action@v4
         with:
+          semantic_version: 16
           branches: |
             [
               '+([0-9])?(.{+([0-9]),x}).x',
