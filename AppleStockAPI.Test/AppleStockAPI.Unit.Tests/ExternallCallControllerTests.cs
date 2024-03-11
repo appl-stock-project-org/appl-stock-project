@@ -9,9 +9,10 @@ namespace AppleStockAPI.Unit.Tests
         private static ExternalCallController controller;
 
         [OneTimeSetUp]
-        public void Setup()
+        public async Task SetupAsync()
         {
             controller = new ExternalCallController();
+            await Task.Delay(5000);
         }
 
         [Test]
