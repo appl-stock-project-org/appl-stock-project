@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection.Metadata;
 using AppleStockAPI.Models;
+using AppleStockAPI.Utilities;
 
 /**
  * 
@@ -51,7 +52,7 @@ namespace AppleStockAPI.Controllers
         // Formats the offer price accordingly and calls to check the offer.
         public void ValidateOffer(Offer offer, double currentStockPrice)
         {
-            offer.Price = Math.Truncate(offer.Price * 100) / 100;
+            offer.Price = MathUtils.TruncateTo2Decimals(offer.Price);
 
             if (!CheckOfferPrice(offer.Price, currentStockPrice) && !CheckOfferQuantity(offer.Quantity))
             {
@@ -104,8 +105,8 @@ namespace AppleStockAPI.Controllers
         // Checks that the offer has a valid price
         public bool CheckOfferPrice(double offerPrice, double stockPrice)
         {
-            double highestValid = Math.Truncate(stockPrice * 110) / 100;
-            double lowestValid = Math.Truncate(stockPrice * 90) / 100;
+            double highestValid = MathUtils.TruncateTo2Decimals(stockPrice * 1.1);
+            double lowestValid = MathUtils.TruncateTo2Decimals(stockPrice * 0.9);
 
             return offerPrice <= highestValid && offerPrice >= lowestValid;
         }

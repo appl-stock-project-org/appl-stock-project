@@ -1,4 +1,5 @@
 using AppleStockAPI.Models;
+using AppleStockAPI.Utilities;
 
 namespace AppleStockAPI.Controllers
 {
@@ -19,7 +20,7 @@ namespace AppleStockAPI.Controllers
         /// </summary>
 		public void ValidateBid(Bid bid, double currentStockPrice) {
 
-			bid.Price = Math.Truncate(bid.Price * 100) / 100;
+			bid.Price = MathUtils.TruncateTo2Decimals(bid.Price);
 
 
 			double lowestAccepted = Math.Round(currentStockPrice * 0.9, 2);

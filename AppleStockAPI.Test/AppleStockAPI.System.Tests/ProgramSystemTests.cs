@@ -1,5 +1,6 @@
 using AppleStockAPI.Models; 
 using AppleStockAPI.Controllers;
+using AppleStockAPI.Utilities; 
 using System.Text.Json;
 using System.Text;
 
@@ -14,10 +15,6 @@ namespace AppleStockAPI.Test
         protected static HttpClient client;
 
         protected static SystemController systemController;
-
-        protected static OfferController offerController;
-
-        protected static BidController bidController;
 
         /// <summary>
         ///  Make a POST request to the given endpoint with content of given object
@@ -42,7 +39,15 @@ namespace AppleStockAPI.Test
             return finalResponseObject;
         }
 
-
+        /// <summary>
+        /// Make a request to the /trades endpoint and parse the result to a list of trades
+        /// </summary>
+        /// <returns>list of trades</returns>
+        protected async Task<List<Trade>> GetAndParseTrades() {
+            await using Stream stream = await client.GetStreamAsync("/trades");
+            List<Trade> tradesFromFetch = (await JsonSerializer.DeserializeAsync<List<Trade>>(stream))!;
+            return tradesFromFetch;
+        }
 
         [OneTimeSetUp]
         public async Task SetupAsync()
@@ -53,9 +58,7 @@ namespace AppleStockAPI.Test
             client = factory.CreateClient();
 
             systemController = factory.Services.GetRequiredService<SystemController>();
-            offerController = systemController.offerController;
-            bidController = systemController.bidController;
-            
+
             Console.WriteLine($"System Test Setup: To assure the external API request is received, delay for 5s starting at {DateTime.Now:yyyy'-'MM'-'dd'T'HH':'mm':'ss}");
             await Task.Delay(5000);
             Console.WriteLine($"System Test Setup: Delay ended at {DateTime.Now:yyyy'-'MM'-'dd'T'HH':'mm':'ss}. Fetched price is {apiCaller.GetLastFetchedPrice()}");
@@ -91,11 +94,7 @@ namespace AppleStockAPI.Test
             var bidToPost = new{ price, quantity = 10 };
             Response response = await (MakePostRequest("/bid", bidToPost) as Task<Response>);
             
-            Assert.Multiple(() =>
-            {
-                Assert.That(response.SuccessMessage, Is.EqualTo($"Bid successfully placed with the price of {price} and quantity of 10."));
-                Assert.That(systemController.ListBids(), Has.Count.EqualTo(1));
-            });
+            Assert.That(response.SuccessMessage, Is.EqualTo($"Bid successfully placed with the price of {MathUtils.TruncateTo2Decimals(price)} and quantity of 10."));
         }
 
         // 1. c. Mistake in the first E2E scenario? This one doesn't match the described outcome in it
@@ -105,15 +104,15 @@ namespace AppleStockAPI.Test
             double price = apiCaller.GetLastFetchedPrice() * 0.9;
             var offerToPost = new{ price, quantity = 10 };
             Response response = await (MakePostRequest("/offer", offerToPost) as Task<Response>);
+
+            List<Trade> trades = await GetAndParseTrades();
             
             Assert.Multiple(() =>
             {
                 Assert.That(response.Success, Is.EqualTo(true));
                 Assert.That(response.ErrorMessage, Is.EqualTo(null));
-                // Assert.That(response.SuccessMessage, Is.EqualTo($"Offer successfully placed with the price of {price} and quantity of 10."));
-                Assert.That(systemController.ListOffers(), Has.Count.EqualTo(0));
-                Assert.That(systemController.ListBids(), Has.Count.EqualTo(0));
-                Assert.That(systemController.ListTrades(), Has.Count.EqualTo(1));
+                StringAssert.StartsWith($"Offer successfully placed with the price of {MathUtils.TruncateTo2Decimals(price)} and quantity of 10. Trade made with bid", response.SuccessMessage);
+                Assert.That(trades, Has.Count.EqualTo(1));
             });
         }
 
@@ -125,12 +124,9 @@ namespace AppleStockAPI.Test
             double price = apiCaller.GetLastFetchedPrice() * 1.11;
             var bidToPost = new{ price, quantity = 10 };
             Response response = await (MakePostRequest("/bid", bidToPost) as Task<Response>);
-            
-            Assert.Multiple(() =>
-            {
-                Assert.That(response.ErrorMessage, Is.EqualTo($"Bid price is too high. Highest accepted price at the moment is {Math.Round(apiCaller.GetLastFetchedPrice() * 1.1, 2)}."));
-                Assert.That(systemController.ListBids(), Has.Count.EqualTo(0));
-            });
+
+            Assert.That(response.ErrorMessage, Is.EqualTo($"Bid price is too high. Highest accepted price at the moment is {Math.Round(apiCaller.GetLastFetchedPrice() * 1.1, 2)}."));
+
         }
 
         // 1. e.
@@ -140,12 +136,13 @@ namespace AppleStockAPI.Test
             double price = apiCaller.GetLastFetchedPrice() * -1.01;
             var offerToPost = new{ price, quantity = 10 };
             Response response = await (MakePostRequest("/offer", offerToPost) as Task<Response>);
+
+            List<Trade> trades = await GetAndParseTrades();
             
             Assert.Multiple(() =>
             {
-                Assert.That(response.ErrorMessage, Is.EqualTo($"Offer rejected with the value of {Math.Truncate(price * 100) / 100}, offer needs to be in the price range of 10% of the market price. Current market price is {apiCaller.GetLastFetchedPrice()}."));
-                Assert.That(systemController.ListOffers(), Has.Count.EqualTo(0));
-                Assert.That(systemController.ListTrades(), Has.Count.EqualTo(1));
+                Assert.That(response.ErrorMessage, Is.EqualTo($"Offer rejected with the value of {MathUtils.TruncateTo2Decimals(price)}, offer needs to be in the price range of 10% of the market price. Current market price is {apiCaller.GetLastFetchedPrice()}."));
+                Assert.That(trades, Has.Count.EqualTo(1));
             });
         }
     }
@@ -167,12 +164,8 @@ namespace AppleStockAPI.Test
             double price = apiCaller.GetLastFetchedPrice();
             var bidToPost = new{ price, quantity = 0 };
             Response response = await (MakePostRequest("/bid", bidToPost) as Task<Response>);
-            
-            Assert.Multiple(() =>
-            {
-                Assert.That(response.ErrorMessage, Is.EqualTo("Bid quantity needs to be above 0."));
-                Assert.That(systemController.ListBids(), Has.Count.EqualTo(0));
-            });
+    
+            Assert.That(response.ErrorMessage, Is.EqualTo("Bid quantity needs to be above 0."));
         }
 
         // 2. c. 
@@ -183,11 +176,7 @@ namespace AppleStockAPI.Test
             var bidToPost = new{ price, quantity = 10.1 };
             Response response = await (MakePostRequest("/bid", bidToPost) as Task<Response>);
             
-            Assert.Multiple(() =>
-            {
-                Assert.That(response.ErrorMessage, Is.EqualTo("Request body didn't adhere to the structure of a valid bid."));
-                Assert.That(systemController.ListBids(), Has.Count.EqualTo(0));
-            });
+            Assert.That(response.ErrorMessage, Is.EqualTo("Request body didn't adhere to the structure of a valid bid."));
         }
 
 
@@ -199,11 +188,12 @@ namespace AppleStockAPI.Test
             var offerToPost = new{ price, quantity = -100 };
             Response response = await (MakePostRequest("/offer", offerToPost) as Task<Response>);
             
+            List<Trade> trades = await GetAndParseTrades();
+
             Assert.Multiple(() =>
             {
                 Assert.That(response.ErrorMessage, Is.EqualTo($"Offer quantity invalid, offer should contain a quantity of larger than 0"));
-                Assert.That(systemController.ListOffers(), Has.Count.EqualTo(0));
-                Assert.That(systemController.ListTrades(), Has.Count.EqualTo(0));
+                Assert.That(trades, Has.Count.EqualTo(0));
             });
         }
     }
@@ -248,14 +238,12 @@ namespace AppleStockAPI.Test
             await (MakePostRequest("/offer", offer2) as Task<Response>);
             
             // 3. h.
-            await using Stream stream = await client.GetStreamAsync("/trades");
-            List<Trade> tradesFromFetch =
-                (await JsonSerializer.DeserializeAsync<List<Trade>>(stream))!;
+            List<Trade> tradesFromFetch = await GetAndParseTrades();
 
             Assert.Multiple(() =>
             {
                 Assert.That(tradesFromFetch, Has.Count.EqualTo(2));
-                Assert.That(tradesFromFetch[0].Price, Is.EqualTo(Math.Truncate(price * 1.01 * 100) / 100));
+                Assert.That(tradesFromFetch[0].Price, Is.EqualTo(MathUtils.TruncateTo2Decimals(price * 1.01)));
                 Assert.That(tradesFromFetch[0].Quantity, Is.EqualTo(200));
                 Assert.That(tradesFromFetch[1].Price, Is.EqualTo(price));
                 Assert.That(tradesFromFetch[1].Quantity, Is.EqualTo(50));

@@ -1,7 +1,4 @@
 ﻿using AppleStockAPI.Models;
-using System;
-using System.Reflection;
-using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace AppleStockAPI.Controllers
@@ -14,9 +11,9 @@ namespace AppleStockAPI.Controllers
         ExternalCallController? apiCaller { get; set; }
         readonly double MOCK_STOCK_PRICE;
 
-        public TradeController tradeController { get; private set; }
-        public BidController bidController { get; private set; }
-        public OfferController offerController { get; private set; }
+        TradeController tradeController { get; set; }
+        BidController bidController { get; set; }
+        OfferController offerController { get; set; }
 
 
         public SystemController()
@@ -72,7 +69,7 @@ namespace AppleStockAPI.Controllers
                 return response;
             }
 
-            double originalPrice = offer.Price;
+            
             int originalQuantity = offer.Quantity;
 
             try
@@ -121,7 +118,7 @@ namespace AppleStockAPI.Controllers
             }
 
             response.Success = true;
-            response.SuccessMessage = $"Offer successfully placed with the price of {originalPrice} and quantity of {originalQuantity}." + tradeMessage;
+            response.SuccessMessage = $"Offer successfully placed with the price of {offer.Price} and quantity of {originalQuantity}." + tradeMessage;
             response.RecordId = offer.Id;
             return response;
         }
@@ -149,7 +146,6 @@ namespace AppleStockAPI.Controllers
 
 
             
-            double originalPrice = bid.Price;
             int originalQuantity = bid.Quantity;
 
             try
@@ -198,7 +194,7 @@ namespace AppleStockAPI.Controllers
             }
 
             response.Success = true;
-            response.SuccessMessage = $"Bid successfully placed with the price of {originalPrice} and quantity of {originalQuantity}." + tradeMessage;
+            response.SuccessMessage = $"Bid successfully placed with the price of {bid.Price} and quantity of {originalQuantity}." + tradeMessage;
             response.RecordId = bid.Id;
             return response;
         }
