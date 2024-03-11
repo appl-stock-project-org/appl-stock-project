@@ -1,30 +1,58 @@
-using Microsoft.EntityFrameworkCore;
-using AppleStockAPI.Models;
 using AppleStockAPI.Controllers;
+using System.Text.Json;
+public class Program
+{
+    public readonly SystemController systemController;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Enable sqlite with connection string and builder
-var connectionString = builder.Configuration.GetConnectionString("Stock") ?? "Data Source=Stock.db";
-builder.Services.AddSingleton<SystemController>();
-
-var app = builder.Build();
-
-SystemController systemController = new();
-
-/*
-    Example POST request body/payload to endpoint "/bid"
+    public Program(SystemController? sc)
     {
-        "price": 80,
-        "quantity": 30
+        // If running normally initiate a new SystemController
+        if (sc == null) systemController = new SystemController();
+        // If a test, parameter is a systemController
+        else systemController = sc;
+
     }
-*/
-app.MapGet("/", () => "Hello World!");
-app.MapGet("/trades", () => systemController.ListTrades());
 
+    public static WebApplicationBuilder CreateBuilder(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+        return builder;
+    }
 
-app.MapPost("/offer", (Offer payload) => systemController.HandleOffer(payload));
-app.MapPost("/bid", (Bid payload) => systemController.HandleBid(payload));
-app.Run();
+    public static void Configure(WebApplication app, SystemController systemController)
+    {
+        // Configure the application using the provided systemController
+        app.MapGet("/trades", () => systemController.ListTrades());
+        app.MapPost("/offer", (JsonElement payload) => systemController.HandleOffer(payload));
+        app.MapPost("/bid", (JsonElement payload) => systemController.HandleBid(payload));
+        app.Run();
+    }
 
-public partial class Program { }
+    public static void Main(string[] args)
+    {
+        var builder = CreateBuilder(args);
+        var app = builder.Build();
+
+        
+        // Try to find this file. Only to be found on test run / test folder
+        var configBuilder = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("Properties/runtime-testconfig.json", optional: true, reloadOnChange: true);
+
+        var configuration = configBuilder.Build();
+        // Get the variable from the config
+        bool isTest = configuration.GetValue<bool>("isTest");
+
+        SystemController? systemController = null;
+        if (isTest) {
+            // Use the SystemController instance from the Dependency Injection container
+            systemController = app.Services.GetRequiredService<SystemController>();
+        }
+
+        // Create an instance of Program with the SystemController instance, if it exists
+        Program program = new Program(systemController);
+
+        // Configure the routes and run
+        Configure(app, program.systemController);
+    }
+}

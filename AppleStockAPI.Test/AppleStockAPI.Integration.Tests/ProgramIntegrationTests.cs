@@ -1,18 +1,21 @@
-using System;
-using System.Net.Http;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
+using System.Text.Json;
 using AppleStockAPI.Controllers;
 using AppleStockAPI.Models;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
-using NUnit.Framework;
+
 
 namespace AppleStockAPI.Integration.Tests
 {
     public class ProgramIntegrationTests
     {
+
+        protected JsonElement ConvertObjectToJsonElement(object obj) {
+            string jsonString = JsonSerializer.Serialize(obj);
+            // Parse the JSON string to get a JsonDocument
+            using JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
+            // Get the root JsonElement
+            return jsonDocument.RootElement.Clone();
+        }
+
         SystemController controller { get; set; }
 
         [SetUp]
@@ -30,12 +33,12 @@ namespace AppleStockAPI.Integration.Tests
         [Test]
         public void HandleOffer_ValidOffer_Passes()
         {
-            Offer validOffer = new Offer { Quantity = 10, Price = 100 };
+            JsonElement validOffer = ConvertObjectToJsonElement(new{ quantity = 10, price = 100});
             Response response = controller.HandleOffer(validOffer);
             
             // Check for success response
             Assert.IsTrue(response.Success);
-            Assert.That(response.SuccessMessage, Is.EqualTo($"Offer successfully placed with the price of {validOffer.Price} and quantity of {validOffer.Quantity}."));
+            Assert.That(response.SuccessMessage, Is.EqualTo($"Offer successfully placed with the price of 100 and quantity of 10."));
 
             // Check that only one offer was added and no bids or trades
             Assert.That(controller.ListOffers().Count, Is.EqualTo(1));
@@ -46,12 +49,12 @@ namespace AppleStockAPI.Integration.Tests
         [Test]
         public void HandleBid_ValidBid_Passes()
         {
-            Bid validBid = new Bid { Quantity = 10, Price = 100 };
+            JsonElement validBid = ConvertObjectToJsonElement(new{ quantity = 10, price = 100});
             Response response = controller.HandleBid(validBid);
 
             // Check for success response
             Assert.IsTrue(response.Success);
-            Assert.That(response.SuccessMessage, Is.EqualTo($"Bid successfully placed with the price of {validBid.Price} and quantity of {validBid.Quantity}."));
+            Assert.That(response.SuccessMessage, Is.EqualTo($"Bid successfully placed with the price of 100 and quantity of 10."));
 
             // Check that only one bid was added and no offers or trades
             Assert.That(controller.ListBids().Count, Is.EqualTo(1));
@@ -65,14 +68,14 @@ namespace AppleStockAPI.Integration.Tests
             // Valid quatity and price for offers
             int quantity = 5;
             double price = 95.0;
-            Offer validOffer1 = new Offer { Quantity = quantity, Price = price };
-            Offer validOffer2 = new Offer { Quantity = quantity, Price = price };
+            JsonElement validOffer1 = ConvertObjectToJsonElement(new{ quantity, price});
+            JsonElement validOffer2 = ConvertObjectToJsonElement(new{ quantity, price});
 
             // Invalid quatity and price for offers
             quantity = 1;
             price = 75.0;
-            Offer invalidOffer1 = new Offer { Quantity = quantity, Price = price };
-            Offer invalidOffer2 = new Offer { Quantity = quantity, Price = price };
+            JsonElement invalidOffer1 = ConvertObjectToJsonElement(new{ quantity, price});
+            JsonElement invalidOffer2 = ConvertObjectToJsonElement(new{ quantity, price});            
 
             Response response1 = controller.HandleOffer(validOffer1);
             Response response2 = controller.HandleOffer(validOffer2);
@@ -84,11 +87,13 @@ namespace AppleStockAPI.Integration.Tests
             Assert.IsFalse(response3.Success);
             Assert.IsFalse(response4.Success);
 
+
             List<Offer> offers = controller.ListOffers();
-            CollectionAssert.Contains(offers, validOffer1);
-            CollectionAssert.Contains(offers, validOffer2);
-            CollectionAssert.DoesNotContain(offers, invalidOffer1);
-            CollectionAssert.DoesNotContain(offers, invalidOffer2);
+            IEnumerable<Guid>? offerIds = offers.Select(offer => offer.Id);
+            CollectionAssert.Contains(offerIds, response1.RecordId);
+            CollectionAssert.Contains(offerIds, response2.RecordId);
+            CollectionAssert.DoesNotContain(offerIds, response3.RecordId);
+            CollectionAssert.DoesNotContain(offerIds, response4.RecordId);
             Assert.That(offers.Count, Is.EqualTo(2));
         }
 
@@ -98,14 +103,14 @@ namespace AppleStockAPI.Integration.Tests
             // Valid quatity and price for bids
             int quantity = 5;
             double price = 95.0;
-            Bid validBid1 = new Bid { Quantity = quantity, Price = price };
-            Bid validBid2 = new Bid { Quantity = quantity, Price = price };
+            JsonElement validBid1 = ConvertObjectToJsonElement(new{ quantity, price});
+            JsonElement validBid2 = ConvertObjectToJsonElement(new{ quantity, price});
             
             // Invalid quatity and price for bids
             quantity = 1;
-            price = 75.0;
-            Bid invalidBid1 = new Bid { Quantity = quantity, Price = price };
-            Bid invalidBid2 = new Bid { Quantity = quantity, Price = price };
+            price = 75.0; 
+            JsonElement invalidBid1 = ConvertObjectToJsonElement(new{ quantity, price});
+            JsonElement invalidBid2 = ConvertObjectToJsonElement(new{ quantity, price});
 
             Response response1 = controller.HandleBid(validBid1);
             Response response2 = controller.HandleBid(validBid2);
@@ -118,20 +123,25 @@ namespace AppleStockAPI.Integration.Tests
             Assert.IsFalse(response4.Success);
 
             List<Bid> bids = controller.ListBids();
-            CollectionAssert.Contains(bids, validBid1);
-            CollectionAssert.Contains(bids, validBid2);
-            CollectionAssert.DoesNotContain(bids, invalidBid1);
-            CollectionAssert.DoesNotContain(bids, invalidBid2);
+            IEnumerable<Guid>? bidIds = bids.Select(bid => bid.Id);
+
+            CollectionAssert.Contains(bidIds, response1.RecordId);
+            CollectionAssert.Contains(bidIds, response2.RecordId);
+            CollectionAssert.DoesNotContain(bidIds, response3.RecordId);
+            CollectionAssert.DoesNotContain(bidIds, response4.RecordId);
             Assert.That(bids.Count, Is.EqualTo(2));
         }
 
         [Test]
         public void HandleOffer_MatchesToBid_NoLeftOvers()
         {
-            Offer validOffer = new Offer { Quantity = 100, Price = 100 };
-            Bid validBid = new Bid { Quantity = 100, Price = 100 };
+            int quantity = 100;
+            int price = 100;
+            JsonElement validOffer = ConvertObjectToJsonElement(new{ quantity, price});
+            JsonElement validBid = ConvertObjectToJsonElement(new{ quantity, price});
 
             Response response1 = controller.HandleBid(validBid);
+            
             Assert.IsTrue(response1.Success);
 
             Response response2 = controller.HandleOffer(validOffer);
@@ -157,8 +167,8 @@ namespace AppleStockAPI.Integration.Tests
         [Test]
         public void HandleOffer_MatchesToBid_OfferQuantityLeftOver()
         {
-            Offer validOffer = new Offer { Quantity = 200, Price = 100 };
-            Bid validBid = new Bid { Quantity = 100, Price = 100 };
+            JsonElement validOffer = ConvertObjectToJsonElement(new{ quantity = 200, price = 100});
+            JsonElement validBid = ConvertObjectToJsonElement(new{ quantity = 100, price = 100});
 
             Response response1 = controller.HandleBid(validBid);
             Response response2 = controller.HandleOffer(validOffer);
@@ -186,8 +196,8 @@ namespace AppleStockAPI.Integration.Tests
         [Test]
         public void HandleOffer_MatchesToBid_BidQuantityLeftOver()
         {
-            Offer validOffer = new Offer { Quantity = 100, Price = 100 };
-            Bid validBid = new Bid { Quantity = 200, Price = 100 };
+            JsonElement validOffer = ConvertObjectToJsonElement(new{ quantity = 100, price = 100});
+            JsonElement validBid = ConvertObjectToJsonElement(new{ quantity = 200, price = 100});
 
             Response response1 = controller.HandleBid(validBid);
             Response response2 = controller.HandleOffer(validOffer);
@@ -215,8 +225,10 @@ namespace AppleStockAPI.Integration.Tests
         [Test]
         public void HandleBid_MatchesToOffer_NoLeftOver()
         {
-            Bid validBid = new Bid { Quantity = 100, Price = 100 };
-            Offer validOffer = new Offer { Quantity = 100, Price = 100 };
+            int quantity = 100;
+            int price = 100;
+            JsonElement validBid = ConvertObjectToJsonElement(new{ quantity, price});
+            JsonElement validOffer = ConvertObjectToJsonElement(new{ quantity, price});
 
             Response response1 = controller.HandleOffer(validOffer);
             Assert.IsTrue(response1.Success);
@@ -244,8 +256,8 @@ namespace AppleStockAPI.Integration.Tests
         [Test]
         public void HandleBid_MatchesToOffer_BidQuantityLeftOver()
         {
-            Bid validBid = new Bid { Quantity = 200, Price = 100 };
-            Offer validOffer = new Offer { Quantity = 100, Price = 100 };
+            JsonElement validBid = ConvertObjectToJsonElement(new{ quantity = 200, price = 100});
+            JsonElement validOffer = ConvertObjectToJsonElement(new{ quantity = 100, price = 100});
 
             Response response1 = controller.HandleOffer(validOffer);
             Response response2 = controller.HandleBid(validBid);
@@ -273,8 +285,8 @@ namespace AppleStockAPI.Integration.Tests
         [Test]
         public void HandleBid_MatchesToOffer_OfferQuantityLeftOver()
         {
-            Bid validBid = new Bid { Quantity = 100, Price = 100 };
-            Offer validOffer = new Offer { Quantity = 200, Price = 100 };
+            JsonElement validBid = ConvertObjectToJsonElement(new{ quantity = 100, price = 100});
+            JsonElement validOffer = ConvertObjectToJsonElement(new{ quantity = 200, price = 100});
 
             Response response1 = controller.HandleBid(validBid);
             Response response2 = controller.HandleOffer(validOffer);
@@ -302,10 +314,17 @@ namespace AppleStockAPI.Integration.Tests
         [Test]
         public void HandleOffer_MatchesToHighestBid()
         {
-            Offer offer = new Offer { Quantity = 100, Price = 100 };
-            Bid bid1 = new Bid { Quantity = 100, Price = 100 };
-            Bid bid2 = new Bid { Quantity = 100, Price = 110 };
-            Bid bid3 = new Bid { Quantity = 100, Price = 90 };
+
+            int quantity = 100;
+            int price = 100;
+            JsonElement offer = ConvertObjectToJsonElement(new{ quantity, price});
+            JsonElement bid1 = ConvertObjectToJsonElement(new{ quantity, price});
+            
+            price = 110;
+            JsonElement bid2 = ConvertObjectToJsonElement(new{ quantity, price});
+
+            price = 90;
+            JsonElement bid3 = ConvertObjectToJsonElement(new{ quantity, price});
 
             controller.HandleBid(bid1);
             controller.HandleBid(bid2);
@@ -325,10 +344,10 @@ namespace AppleStockAPI.Integration.Tests
         [Test]
         public void HandleBid_MatchesToCheapestOffer()
         {
-            Bid bid = new Bid { Quantity = 100, Price = 100 };
-            Offer offer1 = new Offer { Quantity = 100, Price = 110 };
-            Offer offer2 = new Offer { Quantity = 100, Price = 100 };
-            Offer offer3 = new Offer { Quantity = 100, Price = 90 };
+            JsonElement bid = ConvertObjectToJsonElement(new{ quantity = 100, price = 100});
+            JsonElement offer1 = ConvertObjectToJsonElement(new{ quantity = 100, price = 110});
+            JsonElement offer2 = ConvertObjectToJsonElement(new{ quantity = 100, price = 100});
+            JsonElement offer3 = ConvertObjectToJsonElement(new{ quantity = 100, price = 90});
 
             controller.HandleOffer(offer1);
             controller.HandleOffer(offer2);

@@ -23,5 +23,5 @@ jobs:
         run: dotnet build --no-restore
       - name: Test with the dotnet CLI
         run: dotnet test
-      - name: Run system tests (minikube deployment)
+      - name: Simulate kubernetes deployment (minikube deployment)
         uses: ./.github/actions/test-kubernetes-deployment
