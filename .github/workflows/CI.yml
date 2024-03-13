@@ -11,17 +11,23 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
+      
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup .NET
+     
+     - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
-      - name: Restore dependencies
+     
+     - name: Restore dependencies
         run: dotnet restore
-      - name: Build
+     
+     - name: Build
         run: dotnet build --no-restore
-      - name: Test with the dotnet CLI
-        run: dotnet test
+     
+     - name: Test with the dotnet CLI & code coverage
+        run: dotnet test AppleStockAPI.Test/AppleStockAPI.Test.csproj /p:CollectCoverage=true /p:CoverletOutput=../CoverageResults
+      
       - name: Simulate kubernetes deployment (minikube deployment)
         uses: ./.github/actions/test-kubernetes-deployment
