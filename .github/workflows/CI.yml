@@ -10,8 +10,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    steps:
-      
+    steps:    
       - name: Checkout
         uses: actions/checkout@v4
      
@@ -26,8 +25,11 @@ jobs:
      - name: Build
         run: dotnet build --no-restore
      
-     - name: Test with the dotnet CLI & code coverage
+     - name: Test with the dotnet CLI & Code coverage
         run: dotnet test AppleStockAPI.Test/AppleStockAPI.Test.csproj /p:CollectCoverage=true /p:CoverletOutput=../CoverageResults
+        
+     - name: Run Specflow tests
+        run: dotnet test SpecFlowAppleStock/SpecFlowAppleStock.csproj
       
       - name: Simulate kubernetes deployment (minikube deployment)
         uses: ./.github/actions/test-kubernetes-deployment
