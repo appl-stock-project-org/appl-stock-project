@@ -25,10 +25,11 @@ namespace AppleStockAPI.Controllers
         {
             if (price <= 0 || quantity <= 0) return;
             var trade = new Trade()
-            { 
+            {
                 Price = price,
                 Quantity = quantity,
             };
+
             trades.Add(trade);
         }
 
@@ -38,6 +39,17 @@ namespace AppleStockAPI.Controllers
         /// <returns>List of recorded trades</returns>
         public List<Trade> GetTrades() 
         {  
+            return trades;
+        }
+
+        public List<Trade> ListTrades()
+        {
+            trades.Sort(delegate(Trade a, Trade b)
+            {
+                if (a.TradeTime < b.TradeTime) return -1;
+                return 1;
+            });
+
             return trades;
         }
 

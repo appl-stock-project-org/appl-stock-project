@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppleStockAPI.Test", "Apple
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppleStockAPI", "AppleStockAPI\AppleStockAPI.csproj", "{8C2F4DDB-C8C4-4070-B6BA-DB6C84974CDA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpecFlowAppleStock", "SpecFlowAppleStock\SpecFlowAppleStock.csproj", "{13B1D153-9814-4283-9CA7-35D0817B190C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{8C2F4DDB-C8C4-4070-B6BA-DB6C84974CDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C2F4DDB-C8C4-4070-B6BA-DB6C84974CDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C2F4DDB-C8C4-4070-B6BA-DB6C84974CDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13B1D153-9814-4283-9CA7-35D0817B190C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13B1D153-9814-4283-9CA7-35D0817B190C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13B1D153-9814-4283-9CA7-35D0817B190C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13B1D153-9814-4283-9CA7-35D0817B190C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
