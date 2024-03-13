@@ -8,16 +8,11 @@ namespace AppleStockAPI.Unit.Tests
     {
         private static ExternalCallController controller;
 
-        [OneTimeSetUp]
-        public async Task SetupAsync()
-        {
-            controller = new ExternalCallController();
-            await Task.Delay(5000);
-        }
-
         [Test]
         public async Task Controllers_Price_Matches_Fetched_Price()
         {
+            controller = new ExternalCallController();
+
             HttpClient httpClient = new();
             await using Stream stream = await httpClient.GetStreamAsync("https://api.marketdata.app/v1/stocks/quotes/AAPL");
             

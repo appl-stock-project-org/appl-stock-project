@@ -13,15 +13,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
+
       - name: Restore dependencies
         run: dotnet restore
+
       - name: Build
         run: dotnet build --no-restore
+
       - name: Test with the dotnet CLI&Code Coverage
         run: dotnet test /p:CollectCoverage=true /p:CoverletOutput=../CoverageResult
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: test-coverage-report
+          path: CoverageResult.json
+
       - name: Simulate kubernetes deployment (minikube deployment)
         uses: ./.github/actions/test-kubernetes-deployment
