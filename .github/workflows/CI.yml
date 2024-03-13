@@ -21,7 +21,7 @@ jobs:
         run: dotnet restore
       - name: Build
         run: dotnet build --no-restore
-      - name: Test with the dotnet CLI
-        run: dotnet test
+      - name: Test with the dotnet CLI&Code Coverage
+        run: dotnet test /p:CollectCoverage=true /p:CoverletOutput=../CoverageResult
       - name: Simulate kubernetes deployment (minikube deployment)
         uses: ./.github/actions/test-kubernetes-deployment
